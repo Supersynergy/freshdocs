@@ -1,0 +1,14 @@
+# Changelog
+
+## 0.1.0 - 2026-07-02
+
+- Initial release-ready package.
+- Local SQLite FTS docs cache.
+- Version resolution via npm, crates.io, PyPI, and GitHub fallback.
+- README/CHANGELOG/llms.txt fetcher.
+- Repo dependency detection for `package.json`, `Cargo.toml`, and `pyproject.toml`.
+- Agent context packs via `freshdocs context`.
+- MCP stdio server with context/search/sync/detect tools.
+- Top-language source planner with GitHut, GitHub Linguist, GitStars/ghmax, awesome-list, and registry source routes.
+- Optional Synapse export.
+- GitHub Actions CI for Linux and macOS.
