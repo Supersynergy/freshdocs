@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import pathlib
@@ -71,6 +73,25 @@ class FreshdocsCoreTests(unittest.TestCase):
         plan = build_source_plan(3, live=False)
         self.assertEqual(plan["languages"][0]["language"], "Python")
         self.assertIn("ghmax_top_repos", {source["id"] for source in plan["languages"][0]["repo_sources"]})
+
+    def test_help_hides_private_export_command(self):
+        import freshdocs.cli as cli
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            with self.assertRaises(SystemExit) as raised:
+                cli.main(["--help"])
+        self.assertEqual(raised.exception.code, 0)
+        self.assertNotIn("export-synapse", out.getvalue())
+
+    def test_private_export_rejects_unknown_args(self):
+        import freshdocs.cli as cli
+
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = cli.main(["export-synapse", "--unknown"])
+        self.assertEqual(code, 2)
+        self.assertIn("unexpected argument: --unknown", err.getvalue())
 
 
 if __name__ == "__main__":

@@ -10,5 +10,5 @@
 - Agent context packs via `freshdocs context`.
 - MCP stdio server with context/search/sync/detect tools.
 - Top-language source planner with GitHut, GitHub Linguist, GitStars/ghmax, awesome-list, and registry source routes.
-- Optional Synapse export.
+- Optional local export hook for private memory workflows.
 - GitHub Actions CI for Linux and macOS.

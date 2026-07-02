@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Local, version-pinned documentation context for coding agents.",
     )
     p.add_argument("--version", action="version", version=f"freshdocs {__version__}")
-    sub = p.add_subparsers(dest="cmd")
+    sub = p.add_subparsers(dest="cmd", metavar="command")
 
     sub.add_parser("init", help="create default registry and local database")
 
@@ -64,7 +64,6 @@ def build_parser() -> argparse.ArgumentParser:
     det.add_argument("--project", default=".")
 
     sub.add_parser("doctor", help="check local cache and FTS index")
-    sub.add_parser("export-synapse", help="optional: export cached docs into synx")
     sub.add_parser("mcp", help="run MCP stdio server")
 
     sources = sub.add_parser("sources", help="print source, repo, and tool harvest plan for language ecosystems")
@@ -149,6 +148,18 @@ def cmd_detect(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "export-synapse":
+        if len(argv) > 1 and argv[1] in {"-h", "--help"}:
+            print("usage: freshdocs export-synapse")
+            return 0
+        if len(argv) > 1:
+            print(f"freshdocs export-synapse: unexpected argument: {argv[1]}", file=sys.stderr)
+            return 2
+        count = export_synapse()
+        print(f"exported {count} docs to synx")
+        return 0
+
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.cmd is None:
@@ -172,10 +183,6 @@ def main(argv: list[str] | None = None) -> int:
         code, messages = doctor()
         print("\n".join(messages))
         return code
-    if args.cmd == "export-synapse":
-        count = export_synapse()
-        print(f"exported {count} docs to synx")
-        return 0
     if args.cmd == "mcp":
         from .mcp import run_stdio
 

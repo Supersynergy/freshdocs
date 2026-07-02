@@ -4,6 +4,8 @@ Local, version-pinned documentation context for coding agents.
 
 Freshdocs helps Claude Code, Codex, Cursor, OpenCode, ggcoder, and other agents stop guessing outdated APIs. It syncs official docs into a local SQLite cache, pins the resolved package version, and prints compact context packs that fit directly above a coding task.
 
+![Freshdocs local docs-to-agent pipeline](https://raw.githubusercontent.com/Supersynergy/freshdocs/main/assets/freshdocs-hero.png)
+
 ```sh
 uv tool install git+https://github.com/Supersynergy/freshdocs
 freshdocs init
@@ -37,6 +39,15 @@ Freshdocs attacks that exact failure:
 - compact prompt-ready output
 - CLI and MCP interface
 - broad source planner for language, tool, and repo discovery
+
+## What You See
+
+| Signal | Why it matters |
+|---|---|
+| Version pin | The agent sees the exact library version Freshdocs resolved. |
+| Checked date | Reviewers can tell whether the context is fresh or old. |
+| Source label | Snippets point back to docs, changelog, `llms.txt`, or registry data. |
+| Explicit miss | Empty cache and stale docs are visible instead of silently guessed. |
 
 ## Two-Minute Proof
 
@@ -73,7 +84,6 @@ freshdocs context "middleware auth cookies" --project . --sync-stale
 freshdocs search "rate limit middleware" --lib hono
 freshdocs sources --top-languages 300 --format jsonl
 freshdocs mcp
-freshdocs export-synapse
 freshdocs doctor
 ```
 
@@ -127,6 +137,8 @@ Use it when the question is not "what does this API do?" but "where should an ag
 
 ## How It Works
 
+![Freshdocs flow: official docs to version pin to local cache to agent context](https://raw.githubusercontent.com/Supersynergy/freshdocs/main/assets/freshdocs-flow.svg)
+
 1. `freshdocs sync` resolves the current package version from npm, crates.io, PyPI, or GitHub.
 2. It fetches official docs from `llms.txt`, `README.md`, and `CHANGELOG.md` sources.
 3. It chunks and indexes snippets in local SQLite FTS.
@@ -164,7 +176,6 @@ Freshdocs is useful when you want local control:
 | Changelog-aware local search | varies | built in |
 | No account or hosted dependency at answer time | no | yes after sync |
 | Source planner for language/tool/repo discovery | no | yes |
-| Synapse export | no | yes |
 
 Freshdocs is not trying to replace every docs service. It is a small local trust layer for agents.
 
