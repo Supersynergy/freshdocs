@@ -17,12 +17,14 @@ The command builds a language ecosystem harvest plan:
 
 - language universe: GitHub Linguist
 - activity ranking: GitHut stars, pushes, pull requests, issues
-- fresh repo velocity: GitStars through `ghmax`
-- repo/code discovery: `ghmax --repos`, GitHub topic pages
+- fresh repo velocity: GitHub activity and optional local command hints
+- repo/code discovery: GitHub topic pages plus optional GitHub-scale search tools
 - curated lists: awesome-list search, compatible with local awesome-indexer data
 - registry links: PyPI, npm, crates.io, Maven Central, NuGet, Packagist, RubyGems, Hex, Hackage, CRAN, Julia General, LuaRocks, CPAN, opam, Nimble, and others
 
 Default offline mode uses an embedded 300-language seed. Live mode refreshes the rank/universe inputs before rendering.
+
+You do not need `ghmax` or any private search tool to use Freshdocs. Some generated command recipes mention optional local tools when available; treat those as accelerators. The portable value is the source plan: language, registries, GitHub topics, curated lists, and exact search questions.
 
 ## Why This Is Better For Agents
 
@@ -32,7 +34,7 @@ For each language, Freshdocs emits:
 
 - top-star repo command
 - recently updated repo command
-- GitStars velocity command
+- repo velocity command or query
 - awesome-list command
 - GitHub topic URL
 - registry URLs where known
@@ -40,13 +42,29 @@ For each language, Freshdocs emits:
 
 That lets an agent gather fresh evidence for any language without guessing where to look.
 
-## Example
+## Example Without Extra Tools
 
 ```sh
 freshdocs sources --top-languages 5
 ```
 
-Then run the generated commands for a language:
+Then use the generated source plan for a language:
+
+```sh
+# Open the GitHub topic URL from the Freshdocs output.
+open "https://github.com/topics/rust"
+
+# Check the official registry.
+open "https://crates.io"
+
+# Search GitHub for current curated lists and tools.
+open "https://github.com/search?q=awesome+rust&type=repositories"
+open "https://github.com/search?q=rust+language+server&type=repositories"
+```
+
+## Optional Local Accelerators
+
+If you have a GitHub-scale local search tool, Freshdocs also prints command hints such as:
 
 ```sh
 ghmax --repos --lang "Rust" --sort stars --order desc --stars-min 100 -n 50 --format json

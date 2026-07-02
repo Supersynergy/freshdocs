@@ -1,8 +1,8 @@
 # freshdocs
 
-Local, version-pinned documentation context for coding agents.
+Stop AI coding agents from using stale docs.
 
-Freshdocs helps Claude Code, Codex, Cursor, OpenCode, ggcoder, and other agents stop guessing outdated APIs. It syncs official docs into a local SQLite cache, pins the resolved package version, and prints compact context packs that fit directly above a coding task.
+Freshdocs helps Claude Code, Codex, Cursor, OpenCode, and other coding agents stop guessing outdated APIs. It syncs official docs into a local SQLite cache, pins the resolved package version, and prints compact context packs that fit directly above a coding task.
 
 ![Freshdocs local docs-to-agent pipeline](https://raw.githubusercontent.com/Supersynergy/freshdocs/main/assets/freshdocs-hero.png)
 
@@ -37,8 +37,8 @@ Freshdocs attacks that exact failure:
 - local cache after sync
 - visible checked date
 - compact prompt-ready output
-- CLI and MCP interface
-- broad source planner for language, tool, and repo discovery
+- CLI and Model Context Protocol (MCP) interface
+- optional source map for language, tool, and repo discovery
 
 ## What You See
 
@@ -61,6 +61,15 @@ freshdocs context "what I am about to implement" --project . --sync-stale
 If Freshdocs detects relevant registered libraries, it can refresh stale docs and return only matching local snippets. If nothing is cached, it says so instead of inventing facts.
 
 That is the trust contract: **missing docs are visible; stale docs are visible; versions are visible.**
+
+## Terms In Plain English
+
+| Term | Meaning |
+|---|---|
+| MCP | Model Context Protocol: a standard way for AI tools to call local tools. |
+| `llms.txt` | A docs file some projects publish specifically for AI tools. |
+| SQLite FTS | A local database with full-text search. No hosted service required. |
+| Source map | A checklist of where an agent should look before claiming it knows a library or language. |
 
 ## Who It Is For
 
@@ -116,9 +125,11 @@ Example config:
 }
 ```
 
-## Source Planner
+## Advanced: Source Map
 
-Freshdocs can also generate a broad source map for agent research:
+Most users can skip this. It is for people building agents or researching many languages/tools.
+
+Freshdocs can generate a broad source map for agent research:
 
 ```sh
 freshdocs sources --top-languages 300 --live --format markdown > freshdocs-sources.md
@@ -128,10 +139,10 @@ freshdocs sources --top-languages 300 --format jsonl > freshdocs-sources.jsonl
 This emits a repeatable harvest plan:
 
 ```text
-language -> registries -> top repos -> recent repos -> GitStars velocity -> awesome lists -> tool queries
+language -> registries -> top repos -> recent repos -> curated lists -> tool queries
 ```
 
-Sources include GitHub Linguist, GitHut, GitStars via `ghmax`, GitHub topics, awesome-list discovery, and package registries such as PyPI, npm, crates.io, Maven Central, NuGet, Packagist, RubyGems, Hex, Hackage, CRAN, Julia General, LuaRocks, CPAN, opam, and Nimble.
+Sources include GitHub Linguist, GitHut, GitHub topics, awesome-list discovery, optional GitHub-scale search command hints, and package registries such as PyPI, npm, crates.io, Maven Central, NuGet, Packagist, RubyGems, Hex, Hackage, CRAN, Julia General, LuaRocks, CPAN, opam, and Nimble.
 
 Use it when the question is not "what does this API do?" but "where should an agent look for the best current tools and repos?"
 
@@ -160,9 +171,9 @@ FRESHDOCS_STATE=/path/to/state.json
 FRESHDOCS_DB=/path/to/freshdocs.db
 ```
 
-## Freshdocs And Context7
+## Freshdocs And Hosted Docs Tools
 
-Context7 is useful when you want hosted, instantly available public docs through CLI or MCP.
+Hosted docs tools such as Context7 are useful when you want instantly available public docs through CLI or MCP.
 
 Freshdocs is useful when you want local control:
 

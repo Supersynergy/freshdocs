@@ -9,6 +9,6 @@
 - Repo dependency detection for `package.json`, `Cargo.toml`, and `pyproject.toml`.
 - Agent context packs via `freshdocs context`.
 - MCP stdio server with context/search/sync/detect tools.
-- Top-language source planner with GitHut, GitHub Linguist, GitStars/ghmax, awesome-list, and registry source routes.
+- Top-language source planner with GitHut, GitHub Linguist, optional GitHub-scale command hints, awesome-list, and registry source routes.
 - Optional local export hook for private memory workflows.
 - GitHub Actions CI for Linux and macOS.

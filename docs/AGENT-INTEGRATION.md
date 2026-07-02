@@ -2,7 +2,7 @@
 
 Agents do not need more memory by default. They need the right current fact at the point of action.
 
-Freshdocs gives agents a small, local, version-visible docs block. This fits Claude Code, Codex, Cursor, OpenCode, ggcoder, and any client that can run shell commands or MCP tools.
+Freshdocs gives agents a small, local, version-visible docs block. This fits Claude Code, Codex, Cursor, OpenCode, custom local agents, and any client that can run shell commands or MCP tools.
 
 ## Shell Pattern
 
