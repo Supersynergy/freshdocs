@@ -1,10 +1,21 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Supersynergy/freshdocs/main/docs/assets/social-preview.jpg" alt="freshdocs — stop AI coding agents from using stale docs" width="100%">
+</p>
+
 # freshdocs
 
-Stop AI coding agents from using stale docs.
+> Local docs pre-flight check for coding agents — version-pinned context, checked dates, explicit misses, and no hosted service required at answer time.
 
-Freshdocs helps Claude Code, Codex, Cursor, OpenCode, and other coding agents stop guessing outdated APIs. It syncs official docs into a local SQLite cache, pins the resolved package version, and prints compact context packs that fit directly above a coding task.
+[![Release](https://img.shields.io/github/v/release/Supersynergy/freshdocs)](https://github.com/Supersynergy/freshdocs/releases)
+[![License](https://img.shields.io/github/license/Supersynergy/freshdocs)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Supersynergy/freshdocs/ci.yml)](https://github.com/Supersynergy/freshdocs/actions)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB)](pyproject.toml)
 
-![Freshdocs local docs-to-agent pipeline](https://raw.githubusercontent.com/Supersynergy/freshdocs/main/assets/freshdocs-hero.png)
+[Demo](#demo) · [Agent integration](docs/AGENT-INTEGRATION.md) · [Sources](docs/SOURCES.md) · [Releases](https://github.com/Supersynergy/freshdocs/releases) · [Issues](https://github.com/Supersynergy/freshdocs/issues)
+
+> **Local-first by default:** `context`, `search`, `detect`, `status`, and `doctor` never edit your project. `sync` writes only to the Freshdocs cache. If docs are missing or stale, Freshdocs says so instead of hiding the uncertainty.
+
+## Demo
 
 ```sh
 uv tool install git+https://github.com/Supersynergy/freshdocs
@@ -12,6 +23,8 @@ freshdocs init
 freshdocs sync --lib hono
 freshdocs context "middleware auth cookies" --lib hono --limit 3
 ```
+
+![freshdocs demo](https://raw.githubusercontent.com/Supersynergy/freshdocs/main/docs/assets/demo.gif)
 
 You get a small, source-visible block:
 
@@ -39,6 +52,18 @@ Freshdocs attacks that exact failure:
 - compact prompt-ready output
 - CLI and Model Context Protocol (MCP) interface
 - optional source map for language, tool, and repo discovery
+
+## Quick Start
+
+```sh
+uv tool install git+https://github.com/Supersynergy/freshdocs
+freshdocs init
+freshdocs add hono --gh honojs/hono --eco npm --pkg hono
+freshdocs sync --lib hono
+freshdocs context "middleware auth cookies" --lib hono --limit 3
+```
+
+Expected result: a compact `FRESHDOCS CONTEXT` block with library, version, checked date, title, and matching snippets.
 
 ## What You See
 

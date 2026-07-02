@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added release-grade social preview and README demo GIF.
+- Changed README structure to lead with proof, badges, safety contract, quick start, and demo.
+- Changed package description to the user-facing stale-docs prevention claim.
+
 ## 0.1.0 - 2026-07-02
 
 - Initial release-ready package.

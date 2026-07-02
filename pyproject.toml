@@ -1,7 +1,7 @@
 [project]
 name = "freshdocs"
 version = "0.1.0"
-description = "Local, version-pinned documentation context for coding agents."
+description = "Stop AI coding agents from using stale docs."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
