@@ -2,60 +2,64 @@
 
 Local, version-pinned documentation context for coding agents.
 
-Freshdocs gives agents the thing developers actually want: **current API facts at the moment of use, with low friction and no cloud dependency**.
-
-It fetches official docs from GitHub, npm, crates.io, PyPI, `llms.txt`, README, and changelog sources, pins the resolved package version, indexes the content locally, and returns compact context packs for Claude Code, Codex, Cursor, OpenCode, ggcoder, or any MCP client.
-
-## Why Not Just Context7?
-
-Context7 is useful: it pulls fresh, version-specific docs into prompts via CLI or MCP. Freshdocs is built for a different pain point:
-
-| Need | Context7 | freshdocs |
-|---|---|---|
-| Fresh public docs | yes | yes |
-| Version pin from real package registry | yes | yes |
-| Local offline cache after sync | limited by service/client | yes |
-| Private/internal docs | enterprise/cloud path | local-first by default |
-| Repo dependency detection | agent/client dependent | built in |
-| Changelog-aware context | varies by library | first-class |
-| No account, no network at answer time | no | yes after sync |
-| Agent-agnostic CLI + MCP | yes | yes |
-| Synapse/export path | no | optional |
-
-The product thesis: agents fail when they confidently use stale APIs. Humans do not want another docs search box. They want to feel safe shipping code because the agent is grounded in the current toolchain.
-
-## First Win
+Freshdocs helps Claude Code, Codex, Cursor, OpenCode, ggcoder, and other agents stop guessing outdated APIs. It syncs official docs into a local SQLite cache, pins the resolved package version, and prints compact context packs that fit directly above a coding task.
 
 ```sh
 uv tool install git+https://github.com/Supersynergy/freshdocs
 freshdocs init
-freshdocs sync --lib axum --lib tokio
-freshdocs context "websocket server with shared state" --lib axum --lib tokio
+freshdocs sync --lib hono
+freshdocs context "middleware auth cookies" --lib hono --limit 3
 ```
 
-Output is an agent-ready context block:
+You get a small, source-visible block:
 
 ```text
 FRESHDOCS CONTEXT
-query: websocket server with shared state
-libraries: axum, tokio
+query: middleware auth cookies
+libraries: hono
 
-[1] axum 0.8.9 checked 2026-07-02 - ...
+[1] hono 4.12.27 checked 2026-07-02 - Features
 ...
 ```
 
-## What People Want From Agents
+## Why This Exists
 
-People do not want agents to "know everything." They want:
+Agents are fast until they confidently use an API that no longer exists.
 
-- less uncertainty: "Is this API still real?"
-- more control: local cache, visible versions, explicit sources
-- faster progress: no tab-switching across docs
-- protected self-image: fewer embarrassing build breaks from hallucinated APIs
-- memory: the agent remembers the stack and the exact versions in the repo
-- reversibility: docs are local files and SQLite, exportable, inspectable
+The failure is expensive because the code looks plausible. The human only discovers the stale context later, inside build errors, review comments, production bugs, or embarrassing rework.
 
-Freshdocs is designed around that. It is not an infinite context firehose. It gives the agent the smallest useful documentation pack for the current job.
+Freshdocs attacks that exact failure:
+
+- current version facts
+- official README, changelog, `llms.txt`, and registry sources
+- local cache after sync
+- visible checked date
+- compact prompt-ready output
+- CLI and MCP interface
+- broad source planner for language, tool, and repo discovery
+
+## Two-Minute Proof
+
+Run this in any repo:
+
+```sh
+freshdocs detect --project .
+freshdocs context "what I am about to implement" --project . --sync-stale
+```
+
+If Freshdocs detects relevant registered libraries, it can refresh stale docs and return only matching local snippets. If nothing is cached, it says so instead of inventing facts.
+
+That is the trust contract: **missing docs are visible; stale docs are visible; versions are visible.**
+
+## Who It Is For
+
+**Developers** use Freshdocs before asking an agent to write code against a framework, SDK, CLI, runtime, or library.
+
+**Tech leads** use it to make agent output easier to review because every snippet carries library, version, and checked date.
+
+**Teams with private docs** use it because the default path is local files and SQLite, not a hosted service.
+
+**Agent builders** use it as a tiny source tool: shell output when the client has no MCP, MCP tools when it does.
 
 ## Commands
 
@@ -73,19 +77,7 @@ freshdocs export-synapse
 freshdocs doctor
 ```
 
-## Agent Integration
-
-### Codex / Claude Code / Shell
-
-Use before code generation when the prompt includes `latest`, `current`, `API`, `deprecated`, `Rust`, `JS`, `npm`, `cargo`, or framework names:
-
-```sh
-freshdocs context "$USER_TASK" --project . --sync-stale
-```
-
-Paste or inject the returned block above the coding task.
-
-### MCP
+## MCP Tools
 
 Run:
 
@@ -93,15 +85,15 @@ Run:
 freshdocs mcp
 ```
 
-Tools exposed:
+Tools:
 
-- `freshdocs_context`
-- `freshdocs_search`
-- `freshdocs_sync`
-- `freshdocs_detect`
-- `freshdocs_sources`
+- `freshdocs_context`: compact docs pack for an agent prompt
+- `freshdocs_search`: search cached docs
+- `freshdocs_sync`: refresh one registered library
+- `freshdocs_detect`: detect registered libraries in a project
+- `freshdocs_sources`: generate language/tool/repo source plans
 
-Example MCP server config:
+Example config:
 
 ```json
 {
@@ -114,38 +106,94 @@ Example MCP server config:
 }
 ```
 
-## Better-Than-Context7 Bet
+## Source Planner
 
-Freshdocs can be better for serious agent work because it is:
-
-1. **Local-first:** once synced, answers do not depend on a hosted service.
-2. **Repo-aware:** it detects `package.json`, `Cargo.toml`, and `pyproject.toml`.
-3. **Changelog-aware:** recent breaking changes are indexed beside README docs.
-4. **Version-visible:** every snippet carries library, version, and check date.
-5. **Agent-neutral:** CLI output works anywhere; MCP works where native tools exist.
-6. **Private by default:** internal registries and private repos can be added without sending code to a public docs service.
-7. **Composable:** export to Synapse, pipe into prompts, or serve over MCP.
-
-## Language Sources
-
-Freshdocs also ships a source planner for broad agent research:
+Freshdocs can also generate a broad source map for agent research:
 
 ```sh
 freshdocs sources --top-languages 300 --live --format markdown > freshdocs-sources.md
 freshdocs sources --top-languages 300 --format jsonl > freshdocs-sources.jsonl
 ```
 
-It combines GitHub Linguist, GitHut, GitStars via `ghmax`, Awesome-list discovery, registry URLs, and GitHub topic/search commands. The output is not a static "best tools" opinion list. It is a repeatable harvest map: language -> registries -> top repos -> recent repos -> GitStars velocity -> awesome lists -> tool queries.
+This emits a repeatable harvest plan:
 
-## Supported Sources
+```text
+language -> registries -> top repos -> recent repos -> GitStars velocity -> awesome lists -> tool queries
+```
+
+Sources include GitHub Linguist, GitHut, GitStars via `ghmax`, GitHub topics, awesome-list discovery, and package registries such as PyPI, npm, crates.io, Maven Central, NuGet, Packagist, RubyGems, Hex, Hackage, CRAN, Julia General, LuaRocks, CPAN, opam, and Nimble.
+
+Use it when the question is not "what does this API do?" but "where should an agent look for the best current tools and repos?"
+
+## How It Works
+
+1. `freshdocs sync` resolves the current package version from npm, crates.io, PyPI, or GitHub.
+2. It fetches official docs from `llms.txt`, `README.md`, and `CHANGELOG.md` sources.
+3. It chunks and indexes snippets in local SQLite FTS.
+4. `freshdocs context` searches the local cache and prints a compact context block.
+5. The agent receives current docs without a network call at answer time.
+
+Default data location:
+
+```text
+~/.freshdocs/
+```
+
+Override with:
+
+```sh
+FRESHDOCS_HOME=/path/to/cache
+FRESHDOCS_REGISTRY=/path/to/registry.json
+FRESHDOCS_STATE=/path/to/state.json
+FRESHDOCS_DB=/path/to/freshdocs.db
+```
+
+## Freshdocs And Context7
+
+Context7 is useful when you want hosted, instantly available public docs through CLI or MCP.
+
+Freshdocs is useful when you want local control:
+
+| Need | Context7 | freshdocs |
+|---|---:|---:|
+| Fresh public docs | yes | yes |
+| CLI and MCP access | yes | yes |
+| Local offline cache after sync | client/service dependent | yes |
+| Private/internal docs path | enterprise/cloud path | local-first |
+| Repo dependency detection | client dependent | built in |
+| Changelog-aware local search | varies | built in |
+| No account or hosted dependency at answer time | no | yes after sync |
+| Source planner for language/tool/repo discovery | no | yes |
+| Synapse export | no | yes |
+
+Freshdocs is not trying to replace every docs service. It is a small local trust layer for agents.
+
+## Supported Documentation Sources
 
 - npm packages
 - crates.io crates
 - PyPI packages
-- GitHub releases/tags
-- GitHub raw `README.md` and `CHANGELOG.md`
+- GitHub releases and tags
+- GitHub raw `README.md`
+- GitHub raw `CHANGELOG.md`
 - `llms.txt`
 - monorepo subdirectories via `--path`
+
+## Trust Boundaries
+
+Freshdocs does not promise that every README is complete or correct.
+
+It does promise:
+
+- HTTPS-only fetches
+- local SQLite storage
+- visible package version
+- visible checked date
+- explicit misses instead of hidden guesses
+- zero runtime dependencies
+- no hosted Freshdocs service required
+
+Before shipping code, still run the repo's real tests.
 
 ## Development
 
@@ -154,24 +202,28 @@ git clone https://github.com/Supersynergy/freshdocs
 cd freshdocs
 uv venv
 uv pip install -e .
-python -m unittest discover -s tests
-freshdocs doctor
+just ci
 ```
 
-Release check:
+Release smoke:
 
 ```sh
-just ci
+freshdocs init
+freshdocs sync --lib hono
+freshdocs context "middleware auth" --lib hono
+freshdocs sources --top-languages 300 --format jsonl | wc -l
+printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' | freshdocs mcp
 ```
 
 ## Design Contract
 
-Freshdocs should not optimize for "more context." It optimizes for **less wrong context**.
+Freshdocs should not optimize for more context. It optimizes for less wrong context.
 
 Done means:
 
-- current version is visible
-- source is official or user-registered
-- stale state is visible
-- context block is compact enough to read
-- agent can continue without guessing
+- the current version is visible
+- the checked date is visible
+- sources are official or user-registered
+- stale and missing docs are obvious
+- the context block is small enough to inspect
+- the agent can continue without guessing
