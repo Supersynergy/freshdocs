@@ -5,7 +5,8 @@ import pathlib
 import sys
 from typing import Any
 
-from .core import context_pack, detect_project_libs, search, sync_library
+from . import __version__
+from .core import context_pack, detect_project_libs, project_analysis, search, sync_library
 from .sources import build_source_plan, render_source_plan
 
 
@@ -59,6 +60,7 @@ TOOLS = [
             "properties": {
                 "lib": {"type": "string"},
                 "force": {"type": "boolean", "default": False},
+                "version": {"type": "string", "description": "Exact project version; omit only for latest-version research."},
             },
             "required": ["lib"],
         },
@@ -66,6 +68,14 @@ TOOLS = [
     {
         "name": "freshdocs_detect",
         "description": "Detect registered libraries used by a local project.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"project": {"type": "string", "default": "."}},
+        },
+    },
+    {
+        "name": "freshdocs_analyze",
+        "description": "Analyze project languages, manifests, dependencies, and exact lockfile versions.",
         "inputSchema": {
             "type": "object",
             "properties": {"project": {"type": "string", "default": "."}},
@@ -100,10 +110,18 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
         hits = search(args["query"], args.get("libs"), int(args.get("limit", 8)))
         return tool_text(json.dumps(hits, indent=2))
     if name == "freshdocs_sync":
-        return tool_text(json.dumps(sync_library(args["lib"], bool(args.get("force", False))), indent=2))
+        return tool_text(
+            json.dumps(
+                sync_library(args["lib"], bool(args.get("force", False)), args.get("version")),
+                indent=2,
+            )
+        )
     if name == "freshdocs_detect":
         libs = detect_project_libs(pathlib.Path(args.get("project", ".")).expanduser().resolve())
         return tool_text("\n".join(libs) if libs else "No registered libraries detected.")
+    if name == "freshdocs_analyze":
+        analysis = project_analysis(pathlib.Path(args.get("project", ".")).expanduser().resolve())
+        return tool_text(json.dumps(analysis, indent=2))
     if name == "freshdocs_sources":
         top_languages = int(args.get("top_languages", 50))
         fmt = str(args.get("format", "markdown"))
@@ -125,7 +143,7 @@ def run_stdio() -> int:
                     {
                         "protocolVersion": "2024-11-05",
                         "capabilities": {"tools": {}},
-                        "serverInfo": {"name": "freshdocs", "version": "0.1.0"},
+                        "serverInfo": {"name": "freshdocs", "version": __version__},
                     },
                 )
             elif method == "notifications/initialized":

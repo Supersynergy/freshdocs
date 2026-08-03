@@ -52,7 +52,7 @@ Success means at least 3 public signals: star, issue, reply, fork, install proof
 The shareable story is a before/after:
 
 1. Agent writes code against an old API.
-2. Freshdocs injects version-pinned docs with checked date.
+2. Freshdocs injects exact-project-version docs with fetch date, source URL, and ref status.
 3. The same prompt now uses the current API.
 
 Ship that as:

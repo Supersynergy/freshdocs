@@ -33,7 +33,7 @@ Conflict:
 Resolution:
 
 - sync deliberately
-- show checked date
+- show content-fetch date, exact version, source URL, and ref status
 - route only relevant snippets into the prompt
 - make stale visible
 
@@ -45,4 +45,3 @@ The user should feel:
 - faster because docs are already packed
 - in control because everything is local and inspectable
 - competent because fewer API mistakes escape into code
-

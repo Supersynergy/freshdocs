@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import sys
 
@@ -13,10 +14,13 @@ from .core import (
     doctor,
     ensure_registry,
     export_synapse,
+    project_analysis,
     search,
     status_rows,
     sync_library,
 )
+from .analyzer import detected_versions
+from .routing import routed_context
 from .sources import build_source_plan, render_source_plan
 
 
@@ -34,6 +38,8 @@ def build_parser() -> argparse.ArgumentParser:
     sync.add_argument("--lib", action="append", help="library name; repeatable")
     sync.add_argument("--all", action="store_true", help="sync every registered library")
     sync.add_argument("--force", action="store_true", help="re-index even when version is unchanged")
+    sync.add_argument("--project", help="detect libraries and exact versions from this project")
+    sync.add_argument("--version", help="exact version; requires one --lib")
 
     st = sub.add_parser("status", help="show registry and freshness state")
     st.add_argument("--json", action="store_true")
@@ -63,6 +69,14 @@ def build_parser() -> argparse.ArgumentParser:
     det = sub.add_parser("detect", help="detect registered libraries used by a project")
     det.add_argument("--project", default=".")
 
+    analyze = sub.add_parser("analyze", help="analyze project languages, manifests, packages, and exact versions")
+    analyze.add_argument("--project", default=".")
+    analyze.add_argument("--json", action="store_true")
+
+    hook = sub.add_parser("hook", help="local-only adaptive context hook for coding agents")
+    hook.add_argument("--client", choices=["codex", "claude", "raw"], default="codex")
+    hook.add_argument("--limit", type=int, default=3)
+
     sub.add_parser("doctor", help="check local cache and FTS index")
     sub.add_parser("mcp", help="run MCP stdio server")
 
@@ -82,15 +96,30 @@ def cmd_init() -> int:
 
 def cmd_sync(args: argparse.Namespace) -> int:
     reg = ensure_registry()["libs"]
-    libs = args.lib or ([] if not args.all else sorted(reg))
+    analysis = None
+    versions: dict[str, str] = {}
+    if args.project:
+        analysis = project_analysis(pathlib.Path(args.project).expanduser().resolve())
+        versions = detected_versions(analysis)
+    libs = args.lib or ([item["lib"] for item in analysis["libraries"]] if analysis else []) or ([] if not args.all else sorted(reg))
     if not libs:
-        print("nothing to sync: pass --lib NAME or --all", file=sys.stderr)
+        print("nothing to sync: pass --lib NAME, --project PATH, or --all", file=sys.stderr)
+        return 2
+    if args.version and len(libs) != 1:
+        print("--version requires exactly one --lib", file=sys.stderr)
         return 2
     failed = 0
     for lib in libs:
         try:
-            result = sync_library(lib, force=args.force)
-            print(f"{result['lib']:18} {result['version']:14} {result['status']} inserted={result['inserted']} checked={result['checked']}")
+            target = args.version or versions.get(lib)
+            result = sync_library(lib, force=args.force, version=target)
+            pin = "exact-ref" if result.get("exact_ref") else "branch-fallback"
+            print(
+                f"{result['lib']:18} {result['version']:14} {result['status']} "
+                f"inserted={result['inserted']} fetched={result['checked']} {pin}"
+            )
+            for warning in result.get("warnings", []):
+                print(f"  warning: {warning}", file=sys.stderr)
             if result["status"] == "failed":
                 failed += 1
         except Exception as e:
@@ -147,6 +176,54 @@ def cmd_detect(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_analyze(args: argparse.Namespace) -> int:
+    root = pathlib.Path(args.project).expanduser().resolve()
+    analysis = project_analysis(root)
+    if args.json:
+        print(json.dumps(analysis, indent=2))
+        return 0
+    languages = ", ".join(item["language"] for item in analysis["languages"][:8]) or "none"
+    print(f"project: {analysis['project']}")
+    print(f"languages: {languages}")
+    print(f"ecosystems: {', '.join(analysis['ecosystems']) or 'none'}")
+    print(f"manifests: {len(analysis['manifests'])}")
+    print("registered libraries:")
+    for item in analysis["libraries"]:
+        version = item.get("resolved") or f"unresolved ({item.get('requested') or 'no constraint'})"
+        print(f"  {item['lib']:18} {version:18} {item['ecosystem']} via {', '.join(item['manifests'])}")
+    if not analysis["libraries"]:
+        print("  none")
+    return 0
+
+
+def cmd_hook(args: argparse.Namespace) -> int:
+    try:
+        payload = json.loads(sys.stdin.read() or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    prompt = str(payload.get("prompt") or payload.get("user_prompt") or payload.get("message") or "")
+    root = pathlib.Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
+    context = routed_context(prompt, root, args.limit)
+    if not context:
+        return 0
+    if args.client == "raw":
+        print(context)
+    elif args.client == "claude":
+        print(json.dumps({"additionalContext": context}))
+    else:
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "UserPromptSubmit",
+                        "additionalContext": context,
+                    }
+                }
+            )
+        )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "export-synapse":
@@ -179,6 +256,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_search(args)
     if args.cmd == "detect":
         return cmd_detect(args)
+    if args.cmd == "analyze":
+        return cmd_analyze(args)
+    if args.cmd == "hook":
+        return cmd_hook(args)
     if args.cmd == "doctor":
         code, messages = doctor()
         print("\n".join(messages))

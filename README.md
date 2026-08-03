@@ -4,7 +4,7 @@
 
 # freshdocs
 
-> Local docs pre-flight check for coding agents — version-pinned context, checked dates, explicit misses, and no hosted service required at answer time.
+> Local docs pre-flight check for coding agents — exact project versions, visible source refs, explicit misses, and no hosted service required at answer time.
 
 [![Release](https://img.shields.io/github/v/release/Supersynergy/freshdocs)](https://github.com/Supersynergy/freshdocs/releases)
 [![License](https://img.shields.io/github/license/Supersynergy/freshdocs)](LICENSE)
@@ -20,6 +20,7 @@
 ```sh
 uv tool install git+https://github.com/Supersynergy/freshdocs
 freshdocs init
+freshdocs analyze --project .
 freshdocs sync --lib hono
 freshdocs context "middleware auth cookies" --lib hono --limit 3
 ```
@@ -33,7 +34,8 @@ FRESHDOCS CONTEXT
 query: middleware auth cookies
 libraries: hono
 
-[1] hono 4.12.27 checked 2026-07-02 - Features
+[1] hono 4.12.27 fetched 2026-07-02 exact-ref - Features
+source: https://raw.githubusercontent.com/honojs/hono/v4.12.27/README.md
 ...
 ```
 
@@ -45,10 +47,10 @@ The failure is expensive because the code looks plausible. The human only discov
 
 Freshdocs attacks that exact failure:
 
-- current version facts
+- exact versions from project lockfiles
 - official README, changelog, `llms.txt`, and registry sources
 - local cache after sync
-- visible checked date
+- visible content-fetch date, source URL, and Git ref
 - compact prompt-ready output
 - CLI and Model Context Protocol (MCP) interface
 - optional source map for language, tool, and repo discovery
@@ -59,18 +61,19 @@ Freshdocs attacks that exact failure:
 uv tool install git+https://github.com/Supersynergy/freshdocs
 freshdocs init
 freshdocs add hono --gh honojs/hono --eco npm --pkg hono
-freshdocs sync --lib hono
-freshdocs context "middleware auth cookies" --lib hono --limit 3
+freshdocs analyze --project .
+freshdocs context "middleware auth cookies" --project . --sync-stale --limit 3
 ```
 
-Expected result: a compact `FRESHDOCS CONTEXT` block with library, version, checked date, title, and matching snippets.
+Expected result: a compact `FRESHDOCS CONTEXT` block with library, exact project version, fetch date, source URL, Git ref status, title, and matching snippets.
 
 ## What You See
 
 | Signal | Why it matters |
 |---|---|
-| Version pin | The agent sees the exact library version Freshdocs resolved. |
-| Checked date | Reviewers can tell whether the context is fresh or old. |
+| Project version | Freshdocs reads the lockfile before deciding which version belongs in the prompt. |
+| Fetch date | Reviewers see when the document content—not only the registry version—was fetched. |
+| Ref status | `exact-ref` means a matching tag was found; `branch-fallback` and `live-unversioned` are explicit warnings. |
 | Source label | Snippets point back to docs, changelog, `llms.txt`, or registry data. |
 | Explicit miss | Empty cache and stale docs are visible instead of silently guessed. |
 
@@ -85,7 +88,7 @@ freshdocs context "what I am about to implement" --project . --sync-stale
 
 If Freshdocs detects relevant registered libraries, it can refresh stale docs and return only matching local snippets. If nothing is cached, it says so instead of inventing facts.
 
-That is the trust contract: **missing docs are visible; stale docs are visible; versions are visible.**
+That is the trust contract: **missing docs are visible; stale docs are visible; exact and fallback sources are visibly different.**
 
 ## Terms In Plain English
 
@@ -100,7 +103,7 @@ That is the trust contract: **missing docs are visible; stale docs are visible; 
 
 **Developers** use Freshdocs before asking an agent to write code against a framework, SDK, CLI, runtime, or library.
 
-**Tech leads** use it to make agent output easier to review because every snippet carries library, version, and checked date.
+**Tech leads** use it to make agent output easier to review because every snippet carries library, version, fetch date, source URL, and ref status.
 
 **Teams with private docs** use it because the default path is local files and SQLite, not a hosted service.
 
@@ -112,8 +115,10 @@ That is the trust contract: **missing docs are visible; stale docs are visible; 
 freshdocs init
 freshdocs add hono --gh honojs/hono --eco npm --pkg hono
 freshdocs sync --lib hono
+freshdocs sync --project .
 freshdocs status
 freshdocs detect --project .
+freshdocs analyze --project .
 freshdocs context "middleware auth cookies" --project . --sync-stale
 freshdocs search "rate limit middleware" --lib hono
 freshdocs sources --top-languages 300 --format jsonl
@@ -135,6 +140,7 @@ Tools:
 - `freshdocs_search`: search cached docs
 - `freshdocs_sync`: refresh one registered library
 - `freshdocs_detect`: detect registered libraries in a project
+- `freshdocs_analyze`: inspect languages, manifests, dependencies, and exact lockfile versions
 - `freshdocs_sources`: generate language/tool/repo source plans
 
 Example config:
@@ -175,11 +181,13 @@ Use it when the question is not "what does this API do?" but "where should an ag
 
 ![Freshdocs flow: official docs to version pin to local cache to agent context](https://raw.githubusercontent.com/Supersynergy/freshdocs/main/assets/freshdocs-flow.svg)
 
-1. `freshdocs sync` resolves the current package version from npm, crates.io, PyPI, or GitHub.
-2. It fetches official docs from `llms.txt`, `README.md`, and `CHANGELOG.md` sources.
-3. It chunks and indexes snippets in local SQLite FTS.
-4. `freshdocs context` searches the local cache and prints a compact context block.
-5. The agent receives current docs without a network call at answer time.
+1. `freshdocs analyze` detects languages, monorepo manifests, registered libraries, and exact lockfile versions.
+2. `freshdocs sync --project .` prefers those installed versions. Latest registry versions are used only when no project version was requested.
+3. Freshdocs tries the matching Git tag before any default-branch fallback and records the result honestly.
+4. It fetches official docs from `llms.txt`, `README.md`, and `CHANGELOG.md` sources.
+5. It chunks and indexes snippets in local SQLite FTS.
+6. `freshdocs context` searches only the relevant cached version and prints a compact context block.
+7. The agent receives current docs without a network call at answer time.
 
 Default data location:
 
@@ -228,14 +236,15 @@ Freshdocs is not trying to replace every docs service. It is a small local trust
 
 ## Trust Boundaries
 
-Freshdocs does not promise that every README is complete or correct.
+Freshdocs does not promise that every README is complete or correct, and it never treats retrieved text as agent instructions.
 
 It does promise:
 
 - HTTPS-only fetches
 - local SQLite storage
-- visible package version
-- visible checked date
+- visible project/package version
+- visible content-fetch date, source URL, and Git ref status
+- exact-version filtering when a project lockfile resolves the dependency
 - explicit misses instead of hidden guesses
 - zero runtime dependencies
 - no hosted Freshdocs service required
@@ -268,8 +277,9 @@ Freshdocs should not optimize for more context. It optimizes for less wrong cont
 
 Done means:
 
-- the current version is visible
-- the checked date is visible
+- the project version is visible
+- the content-fetch date and source URL are visible
+- an unpinned branch fallback is labeled instead of presented as exact
 - sources are official or user-registered
 - stale and missing docs are obvious
 - the context block is small enough to inspect

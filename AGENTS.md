@@ -11,6 +11,7 @@ Use `freshdocs sources` when the task is discovery-oriented: finding current lan
 Run:
 
 ```sh
+freshdocs analyze --project .
 freshdocs context "$USER_TASK" --project . --sync-stale
 ```
 
@@ -28,20 +29,21 @@ freshdocs sources --top-languages 300 --format jsonl
 
 ## Staleness Rule
 
-If a relevant library has no cached docs or was checked more than 14 days ago, sync it before relying on the answer:
+If a relevant library has no cached docs or Freshdocs marks its content stale, sync the exact project version before relying on the answer:
 
 ```sh
-freshdocs sync --lib <name>
+freshdocs sync --project .
 ```
 
-Network calls belong in sync. Prompt-time context should usually come from the local cache.
+Freshness is adaptive: preview versions refresh daily, npm/GitHub sources every 3 days, and stable Python/Rust packages every 7 days unless the registry overrides the window. Network calls belong in sync. Prompt-time context comes from the local cache.
 
 ## Done Rule
 
 An agent may claim a docs-grounded implementation only when:
 
 - the relevant docs pack was generated for the task
-- snippets include library version and checked date
+- snippets include project version, content-fetch date, source URL, and ref status
+- `branch-fallback` is not presented as an exact version tag
 - generated code passes the repo's real tests
 - missing docs are stated instead of guessed
 

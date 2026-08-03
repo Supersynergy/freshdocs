@@ -4,7 +4,6 @@ import collections
 import datetime as dt
 import json
 import re
-import urllib.parse
 from importlib import resources  # nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2 - requires-python >=3.11
 from typing import Any
 
