@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from importlib import resources  # nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2 - requires-python >=3.11
 from typing import Any
 
+from . import __version__
 from .analyzer import analyze_project, detected_versions
 
 APP_DIR = pathlib.Path(os.environ.get("FRESHDOCS_HOME", pathlib.Path.home() / ".freshdocs"))
@@ -26,9 +27,40 @@ LEGACY_REGISTRY_PATH = pathlib.Path(
     os.environ.get("FRESHDOCS_LEGACY_REGISTRY", pathlib.Path.home() / ".claude" / "freshdocs" / "registry.json")
 )
 SOURCE = "freshdocs"
+# Bumped whenever the indexing pipeline changes what gets stored. A cached version
+# built by an older pipeline is stale even when it is young, otherwise a project
+# pinned to an old library version keeps serving thin pre-upgrade chunks forever.
+INDEX_FORMAT = 2
 CHUNK_SIZE = 1800
-MAX_DOC_CHARS = 120_000
-USER_AGENT = "freshdocs/0.1"
+# Bounds one library's cached corpus. A full documentation site does not fit in the
+# original 120k, and retrieval only ever returns the top chunks, so coverage is worth
+# more than a small cache.
+MAX_DOC_CHARS = 500_000
+USER_AGENT = f"freshdocs/{__version__}"
+
+# Retrieval quality controls.
+# A README or llms.txt index is mostly navigation: it points at answers instead of
+# containing them. Those chunks are scored at index time and penalised at query time
+# so real prose always wins.
+NAV_LINK_RATIO = 0.5
+NAV_PENALTY = 12.0
+LLMS_MAX_PAGES = 14
+LLMS_MIN_PAGE_CHARS = 300
+# A real documentation site has far more than a dozen pages; MAX_DOC_CHARS is the
+# actual bound, so this only caps the number of requests per sync.
+DOCS_MAX_FILES = 60
+# Documentation sites rarely keep prose in a top-level docs/ folder; Astro, Starlight
+# and VitePress bury it under src/content/docs, so the segment is matched at any depth.
+DOCS_DIR_SEGMENTS = frozenset({"docs", "doc", "documentation", "guides", "guide"})
+DOCS_SKIP_PATTERN = re.compile(
+    r"(^|/)(node_modules|\.github|i18n|translations?|zh|ja|ko|fr|de|es|pt|ru)(/|$)",
+    re.IGNORECASE,
+)
+# Governance files can never answer an API question, so they never earn a slot.
+DOCS_BOILERPLATE_PATTERN = re.compile(
+    r"(contributing|code.?of.?conduct|license|licence|security|governance|funding|support)",
+    re.IGNORECASE,
+)
 
 
 class TransientHTTPError(RuntimeError):
@@ -101,7 +133,13 @@ def ensure_registry() -> dict[str, Any]:
         legacy = load_json(LEGACY_REGISTRY_PATH, {"libs": {}})
         merged.setdefault("libs", {}).update(legacy.get("libs", {}))
         migrations["legacy_registry"] = today()
-    merged.setdefault("libs", {}).update(current.get("libs", {}))
+    # Per-entry merge, not replacement: a user's own fields win, while metadata added
+    # to the shipped registry later (such as a separate docs repository) still reaches
+    # libraries that were registered before that field existed.
+    libs = merged.setdefault("libs", {})
+    for name, entry in current.get("libs", {}).items():
+        base = libs.get(name)
+        libs[name] = {**base, **entry} if isinstance(base, dict) and isinstance(entry, dict) else entry
     if migrations:
         merged["_migrations"] = migrations
     if merged != current:
@@ -220,6 +258,11 @@ def version_ref_candidates(name: str, meta: dict[str, Any], version: str) -> lis
                 f"{package}@{clean}",
                 f"{package_leaf}@{clean}",
                 f"{name}@{clean}",
+                # Projects such as bun tag releases as <name>-v<version>.
+                f"{package_leaf}-v{clean}",
+                f"{name}-v{clean}",
+                f"{package_leaf}-{clean}",
+                f"{name}-{clean}",
             ]
         )
     )
@@ -269,11 +312,36 @@ def fetch_library(name: str, meta: dict[str, Any], version: str | None = None) -
                 selected_ref = ref
                 break
 
+    used = sum(len(source.text) for source in sources)
+    docs_pages, tree_listed = _fetch_docs_tree(repo, prefixes, selected_ref, max(0, MAX_DOC_CHARS - used))
+    # Many projects keep prose docs in a separate website repository, which has no
+    # version tag of its own; it is fetched at its default branch and labelled live.
+    if docs_repo := meta.get("docs_gh"):
+        docs_branch = str(meta.get("docs_branch", "main"))
+        used = sum(len(source.text) for source in sources) + sum(len(page.text) for page in docs_pages)
+        extra, extra_listed = _fetch_docs_tree(
+            str(docs_repo), [""], docs_branch, max(0, MAX_DOC_CHARS - used)
+        )
+        docs_pages.extend(DocSource(page.name, page.url, "live", page.text) for page in extra)
+        tree_listed = tree_listed or extra_listed
+    if docs_pages:
+        sources.extend(docs_pages)
+    elif tree_listed and sources:
+        fetch_warnings.append("no docs/ directory found; README and CHANGELOG only")
+
     if meta.get("llms"):
         try:
             text = fetch_url(str(meta["llms"]))
             if len(text.strip()) >= 200:
-                sources.append(DocSource("llms.txt", str(meta["llms"]), "live", text[:MAX_DOC_CHARS]))
+                used = sum(len(source.text) for source in sources)
+                budget = max(0, MAX_DOC_CHARS - used)
+                pages = _fetch_llms_pages(text, str(meta["llms"]), budget)
+                if pages:
+                    sources.extend(pages)
+                elif not is_navigation_chunk(text):
+                    sources.append(DocSource("llms.txt", str(meta["llms"]), "live", text[:budget]))
+                else:
+                    fetch_warnings.append("llms.txt is a link index and none of its pages could be fetched")
         except Exception as error:
             fetch_warnings.append(f"optional llms.txt failed: {type(error).__name__}")
     if not sources:
@@ -288,6 +356,147 @@ def fetch_library(name: str, meta: dict[str, Any], version: str | None = None) -
         bounded.append(DocSource(source.name, source.url, source.ref, text))
         total += len(text)
     return LibraryFetch(version, selected_ref, exact_ref, tuple(bounded), tuple(fetch_warnings))
+
+
+def link_density(text: str) -> float:
+    """Share of the chunk that is markdown link syntax rather than prose.
+
+    At or above NAV_LINK_RATIO the chunk is a table of contents: useful to a human
+    browsing docs, useless as an answer for an agent writing code.
+    """
+    body = text.strip()
+    if not body:
+        return 0.0
+    link_chars = sum(len(match.group(0)) for match in re.finditer(r"\[[^\]]*\]\([^)]*\)", body))
+    return min(1.0, link_chars / len(body))
+
+
+def is_navigation_chunk(text: str) -> bool:
+    return link_density(text) >= NAV_LINK_RATIO
+
+
+def looks_like_html(text: str) -> bool:
+    head = text.lstrip()[:400].lower()
+    return head.startswith(("<!doctype", "<html")) or "<head>" in head
+
+
+def parse_llms_links(text: str, base_url: str) -> list[tuple[str, str]]:
+    """Extract the documentation pages an llms.txt index points at.
+
+    llms.txt is a link index. Indexing it verbatim stores pointers instead of content,
+    so the links have to be followed to obtain real documentation.
+
+    Some sites list extensionless doc routes (``/docs/select``); those get a ``.md``
+    candidate because the markdown source is what an agent can actually use.
+    """
+    links: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for title, href in re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text):
+        url = urllib.parse.urljoin(base_url, href.strip()).split("#", 1)[0]
+        if not url.startswith("https://"):
+            continue
+        path = urllib.parse.urlparse(url).path
+        if path in ("", "/"):
+            continue
+        lowered = path.lower()
+        if not lowered.endswith((".md", ".mdx", ".txt")):
+            if "." in path.rsplit("/", 1)[-1]:
+                continue  # a non-markdown asset such as .png or .json
+            url = url.rstrip("/") + ".md"
+        if url in seen:
+            continue
+        seen.add(url)
+        links.append((title.strip(), url))
+    return links
+
+
+def _fetch_llms_pages(index_text: str, index_url: str, budget: int) -> list[DocSource]:
+    """Resolve an llms.txt index into the pages it references."""
+    pages: list[DocSource] = []
+    used = 0
+    for title, url in parse_llms_links(index_text, index_url)[:LLMS_MAX_PAGES]:
+        if used >= budget:
+            break
+        try:
+            text = fetch_url(url)
+        except Exception:
+            continue
+        if len(text.strip()) < LLMS_MIN_PAGE_CHARS or is_navigation_chunk(text) or looks_like_html(text):
+            continue
+        text = text[: budget - used]
+        pages.append(DocSource(f"llms:{title}"[:80], url, "live", text))
+        used += len(text)
+    return pages
+
+
+def _github_tree(repo: str, ref: str) -> list[str]:
+    url = f"https://api.github.com/repos/{repo}/git/trees/{urllib.parse.quote(ref, safe='')}?recursive=1"
+    # The GitHub API rejects requests without a User-Agent with HTTP 403.
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT}
+    if token := gh_token():
+        headers["Authorization"] = f"Bearer {token}"
+    payload = json.loads(https_get(url, headers, timeout=12))
+    return [
+        str(node["path"])
+        for node in payload.get("tree", [])
+        if node.get("type") == "blob" and str(node.get("path", "")).lower().endswith((".md", ".mdx"))
+    ]
+
+
+def rank_doc_paths(paths: list[str], prefixes: list[str]) -> list[str]:
+    """Pick the documentation files most likely to answer an API question."""
+    del prefixes  # documentation is located by path segment, not by package prefix
+    scoped: list[str] = []
+    for path in paths:
+        lowered = path.lower()
+        if DOCS_SKIP_PATTERN.search(lowered) or DOCS_BOILERPLATE_PATTERN.search(lowered):
+            continue
+        segments = lowered.split("/")
+        if any(segment in DOCS_DIR_SEGMENTS for segment in segments[:-1]):
+            scoped.append(path)
+
+    def score(path: str) -> tuple[int, int, str]:
+        lowered = path.lower()
+        priority = 2
+        if re.search(r"(guide|usage|api|reference|middleware|auth|config|migration|getting.?started)", lowered):
+            priority = 0
+        elif re.search(r"(example|recipe|how.?to|tutorial)", lowered):
+            priority = 1
+        return (priority, lowered.count("/"), lowered)
+
+    return sorted(dict.fromkeys(scoped), key=score)[:DOCS_MAX_FILES]
+
+
+def _fetch_docs_tree(repo: str, prefixes: list[str], ref: str, budget: int) -> tuple[list[DocSource], bool]:
+    """Fetch prose documentation from the repository's docs directory.
+
+    A README states what a library is. The docs directory states how to use it,
+    which is what an agent writing code actually needs.
+
+    Returns the sources and whether the repository tree could be listed at all, so a
+    network failure is never reported as "this project has no docs".
+    """
+    try:
+        paths = _github_tree(repo, ref)
+    except Exception:
+        return [], False
+    encoded_ref = urllib.parse.quote(ref, safe="")
+    sources: list[DocSource] = []
+    used = 0
+    for path in rank_doc_paths(paths, prefixes):
+        if used >= budget:
+            break
+        url = f"https://raw.githubusercontent.com/{repo}/{encoded_ref}/{urllib.parse.quote(path)}"
+        try:
+            text = fetch_url(url)
+        except Exception:
+            continue
+        if len(text.strip()) < LLMS_MIN_PAGE_CHARS or is_navigation_chunk(text) or looks_like_html(text):
+            continue
+        text = text[: budget - used]
+        sources.append(DocSource(path, url, ref, text))
+        used += len(text)
+    return sources, True
 
 
 def chunk_markdown(text: str, size: int = CHUNK_SIZE) -> list[str]:
@@ -327,6 +536,9 @@ def db() -> sqlite3.Connection:
     con.execute(
         "CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(lib, version, title, text, content='docs', content_rowid='id')"
     )
+    columns = {row[1] for row in con.execute("PRAGMA table_info(docs)")}
+    if "nav" not in columns:
+        con.execute("ALTER TABLE docs ADD COLUMN nav REAL NOT NULL DEFAULT 0")
     return con
 
 
@@ -344,8 +556,8 @@ def _index_doc_chunks(
         first = next((line for line in chunk.splitlines() if line.strip() and not line.startswith("<!--")), "")
         title = re.sub(r"^#+\s*", "", first).strip()[:80] or f"chunk {i}"
         cur = con.execute(
-            "INSERT OR IGNORE INTO docs(lib, version, checked, title, source, text) VALUES (?, ?, ?, ?, ?, ?)",
-            (name, version, checked, title, source, chunk),
+            "INSERT OR IGNORE INTO docs(lib, version, checked, title, source, text, nav) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (name, version, checked, title, source, chunk, link_density(chunk)),
         )
         if cur.rowcount:
             rowid = cur.lastrowid
@@ -424,6 +636,8 @@ def is_stale(state: dict[str, Any], name: str, version: str, meta: dict[str, Any
     fetched = item.get("content_fetched") or item.get("fetched")
     if not fetched:
         return True
+    if int(item.get("index_format", 1)) < INDEX_FORMAT:
+        return True
     try:
         age = (dt.date.today() - dt.date.fromisoformat(fetched)).days
     except (TypeError, ValueError):
@@ -465,6 +679,7 @@ def sync_library(name: str, force: bool = False, version: str | None = None) -> 
     version_state = {
         "version_checked": checked,
         "content_fetched": checked,
+        "index_format": INDEX_FORMAT,
         "ref": fetched.ref,
         "exact_ref": fetched.exact_ref,
         "content_sha256": fetched.content_hash,
@@ -513,11 +728,28 @@ def status_rows() -> list[dict[str, Any]]:
     return rows
 
 
-def fts_query(query: str) -> str:
+def query_terms(query: str) -> list[str]:
     terms = re.findall(r"[A-Za-z0-9_]{3,}", query)
     if not terms:
         terms = re.findall(r"[A-Za-z0-9_]+", query)
-    return " OR ".join(dict.fromkeys(terms)) or '""'
+    return list(dict.fromkeys(terms))
+
+
+def fts_query(query: str, operator: str = "OR") -> str:
+    return f" {operator} ".join(query_terms(query)) or '""'
+
+
+def fts_query_plan(query: str) -> list[str]:
+    """Match strategies from most to least precise.
+
+    A pure OR match is why a question about auth middleware can return the README's
+    feature list: a single common word is enough to score. AND is tried first so a
+    chunk must cover the whole question, and OR only catches what AND misses.
+    """
+    terms = query_terms(query)
+    if len(terms) < 2:
+        return [fts_query(query)]
+    return [fts_query(query, "AND"), fts_query(query, "OR")]
 
 
 def search(
@@ -527,7 +759,6 @@ def search(
     versions: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     con = db()
-    terms = fts_query(query)
     try:
         if versions:
             con.execute("CREATE TEMP TABLE IF NOT EXISTS selected_versions(lib TEXT PRIMARY KEY, version TEXT NOT NULL)")
@@ -536,46 +767,36 @@ def search(
                 "INSERT OR REPLACE INTO selected_versions(lib, version) VALUES (?, ?)",
                 sorted(versions.items()),
             )
-            rows = con.execute(
-                """
-                SELECT docs.lib, docs.version, docs.checked, docs.title, docs.source, docs.text, bm25(docs_fts) AS rank
-                FROM docs_fts JOIN docs ON docs_fts.rowid = docs.id
-                WHERE docs_fts MATCH ?
+            scope = """
                   AND EXISTS (
                       SELECT 1 FROM selected_versions
                       WHERE selected_versions.lib = docs.lib AND selected_versions.version = docs.version
                   )
-                ORDER BY rank
-                LIMIT ?
-                """,
-                [terms, limit],
-            ).fetchall()
+            """
         elif libs:
             con.execute("CREATE TEMP TABLE IF NOT EXISTS selected_libs(name TEXT PRIMARY KEY)")
             con.execute("DELETE FROM selected_libs")
             con.executemany("INSERT OR IGNORE INTO selected_libs(name) VALUES (?)", [(lib,) for lib in libs])
-            rows = con.execute(
-                """
-                SELECT docs.lib, docs.version, docs.checked, docs.title, docs.source, docs.text, bm25(docs_fts) AS rank
-                FROM docs_fts JOIN docs ON docs_fts.rowid = docs.id
-                WHERE docs_fts MATCH ?
-                  AND EXISTS (SELECT 1 FROM selected_libs WHERE selected_libs.name = docs.lib)
-                ORDER BY rank
-                LIMIT ?
-                """,
-                [terms, limit],
-            ).fetchall()
+            scope = "  AND EXISTS (SELECT 1 FROM selected_libs WHERE selected_libs.name = docs.lib)"
         else:
-            rows = con.execute(
-                """
-                SELECT docs.lib, docs.version, docs.checked, docs.title, docs.source, docs.text, bm25(docs_fts) AS rank
-                FROM docs_fts JOIN docs ON docs_fts.rowid = docs.id
-                WHERE docs_fts MATCH ?
-                ORDER BY rank
-                LIMIT ?
-                """,
-                [terms, limit],
-            ).fetchall()
+            scope = ""
+
+        sql = f"""
+            SELECT docs.lib, docs.version, docs.checked, docs.title, docs.source, docs.text,
+                   bm25(docs_fts) + (docs.nav * ?) AS rank
+            FROM docs_fts JOIN docs ON docs_fts.rowid = docs.id
+            WHERE docs_fts MATCH ?{scope}
+            ORDER BY rank
+            LIMIT ?
+        """
+        rows: list[Any] = []
+        for terms in fts_query_plan(query):
+            try:
+                rows = con.execute(sql, [NAV_PENALTY, terms, limit]).fetchall()
+            except sqlite3.OperationalError:
+                continue
+            if rows:
+                break
     finally:
         con.close()
     return [
@@ -689,17 +910,65 @@ def context_pack(
             ]
         )
     if not hits:
-        if auto_selected and selected and not selected_versions:
-            lines.append("Detected libraries, but no exact lockfile versions were found. Add or refresh the project lockfile before trusting API details.")
-        elif selected:
-            lines.append("No exact local docs matched. Run this command before relying on third-party API details:")
-            lines.append(f"freshdocs context {json.dumps(query)} --project {json.dumps(str(root))} --sync-stale")
-        else:
-            lines.append("No registered third-party libraries were detected. Freshdocs did not guess from unrelated cached docs.")
+        lines.extend(_miss_advice(query, root, selected, selected_versions, auto_selected))
     return "\n".join(lines).rstrip() + "\n"
 
 
-def add_library(name: str, gh: str, eco: str, branch: str = "main", pkg: str | None = None, path_value: str | None = None, llms: str | None = None) -> None:
+def _miss_advice(
+    query: str,
+    root: pathlib.Path,
+    selected: list[str],
+    selected_versions: dict[str, str],
+    auto_selected: bool,
+) -> list[str]:
+    """Explain a miss as a cache gap with a fix, not as an empty result.
+
+    An agent that reads "no matches" retries reworded queries against the same cache
+    and burns tokens on a cache that cannot answer. Naming the gap and the single
+    command that closes it stops that loop.
+    """
+    project = json.dumps(str(root))
+    lines = ["RESULT: no matching documentation in the local cache."]
+    if auto_selected and selected and not selected_versions:
+        lines += [
+            "CAUSE: libraries were detected but no exact lockfile version was resolved.",
+            "This is a project-state gap, not a bad query. Do not retry reworded queries.",
+            "FIX:",
+            "  1. install dependencies so a lockfile exists",
+            f"  2. freshdocs analyze --project {project}",
+            f"  3. freshdocs context {json.dumps(query)} --project {project} --sync-stale",
+        ]
+    elif selected:
+        lines += [
+            f"CAUSE: no cached chunk for {', '.join(selected)} matched this question.",
+            "This is a cache gap, not a bad query. Do not retry reworded queries.",
+            "FIX:",
+            f"  1. freshdocs context {json.dumps(query)} --project {project} --sync-stale",
+            "  2. if it still misses, the docs do not cover this API: say so instead of guessing",
+        ]
+    else:
+        lines += [
+            "CAUSE: no registered library was detected for this project.",
+            "Freshdocs did not fall back to unrelated cached docs.",
+            "FIX:",
+            "  1. freshdocs add <name> --gh <owner/repo> --eco <npm|pypi|crates>",
+            f"  2. freshdocs context {json.dumps(query)} --project {project} --sync-stale",
+        ]
+    lines.append("Until then, state that the API could not be verified against current docs.")
+    return lines
+
+
+def add_library(
+    name: str,
+    gh: str,
+    eco: str,
+    branch: str = "main",
+    pkg: str | None = None,
+    path_value: str | None = None,
+    llms: str | None = None,
+    docs_gh: str | None = None,
+    docs_branch: str = "main",
+) -> None:
     reg = ensure_registry()
     entry: dict[str, Any] = {"gh": gh, "branch": branch, "eco": eco}
     if pkg:
@@ -708,8 +977,28 @@ def add_library(name: str, gh: str, eco: str, branch: str = "main", pkg: str | N
         entry["path"] = path_value
     if llms:
         entry["llms"] = llms
+    if docs_gh:
+        entry["docs_gh"] = docs_gh
+        entry["docs_branch"] = docs_branch
     reg.setdefault("libs", {})[name] = entry
     write_json(REGISTRY_PATH, reg)
+
+
+def outdated_index_versions() -> list[tuple[str, str]]:
+    """Cached versions whose chunks were produced by an older indexing pipeline."""
+    state = load_json(STATE_PATH, {})
+    outdated: list[tuple[str, str]] = []
+    for lib, item in sorted(state.items()):
+        if not isinstance(item, dict):
+            continue
+        versions = item.get("versions")
+        entries = versions.items() if isinstance(versions, dict) else [(item.get("version"), item)]
+        for version, entry in entries:
+            if not version or not isinstance(entry, dict):
+                continue
+            if int(entry.get("index_format", 1)) < INDEX_FORMAT:
+                outdated.append((lib, str(version)))
+    return outdated
 
 
 def doctor() -> tuple[int, list[str]]:
@@ -725,6 +1014,13 @@ def doctor() -> tuple[int, list[str]]:
     messages.append(f"state:    {STATE_PATH}")
     messages.append(f"db:       {DB_PATH}")
     messages.append("sqlite fts5: ok")
+    if outdated := outdated_index_versions():
+        shown = ", ".join(f"{lib} {version}" for lib, version in outdated[:6])
+        more = f" (+{len(outdated) - 6} more)" if len(outdated) > 6 else ""
+        messages.append(f"index format: {len(outdated)} cached version(s) built by an older indexer: {shown}{more}")
+        messages.append("  refresh them with: freshdocs sync --all --force")
+    else:
+        messages.append(f"index format: all cached versions at format {INDEX_FORMAT}")
     return 0, messages
 
 

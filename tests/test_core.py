@@ -247,6 +247,168 @@ class FreshdocsCoreTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("unexpected argument: --unknown", err.getvalue())
 
+    def test_version_cached_by_an_older_indexer_counts_as_stale(self):
+        meta = {"gh": "example/demo", "eco": "npm"}
+        fresh_today = self.core.today()
+        state = {
+            "demo": {
+                "version": "1.0.0",
+                "versions": {
+                    "1.0.0": {"content_fetched": fresh_today, "index_format": 1},
+                    "2.0.0": {"content_fetched": fresh_today, "index_format": self.core.INDEX_FORMAT},
+                },
+            }
+        }
+        self.assertTrue(self.core.is_stale(state, "demo", "1.0.0", meta))
+        self.assertFalse(self.core.is_stale(state, "demo", "2.0.0", meta))
+
+    def test_doctor_reports_versions_built_by_an_older_indexer(self):
+        self.core.write_json(
+            self.core.STATE_PATH,
+            {"demo": {"version": "1.0.0", "versions": {"1.0.0": {"content_fetched": "2026-07-27", "index_format": 1}}}},
+        )
+        self.assertEqual(self.core.outdated_index_versions(), [("demo", "1.0.0")])
+        _, messages = self.core.doctor()
+        self.assertTrue(any("older indexer" in line for line in messages))
+
+    def test_version_candidates_cover_name_prefixed_release_tags(self):
+        candidates = self.core.version_ref_candidates("bun", {"pkg": "bun"}, "1.4.0")
+        self.assertIn("v1.4.0", candidates)
+        self.assertIn("bun-v1.4.0", candidates)
+
+    def test_registry_gains_new_default_fields_without_losing_user_values(self):
+        self.core.write_json(
+            self.core.REGISTRY_PATH,
+            {"libs": {"hono": {"gh": "honojs/hono", "branch": "custom", "eco": "npm"}}},
+        )
+        entry = self.core.ensure_registry()["libs"]["hono"]
+        self.assertEqual(entry["branch"], "custom")
+        self.assertEqual(entry.get("docs_gh"), "honojs/website")
+
+    def test_link_density_separates_navigation_from_prose(self):
+        nav = "## Docs\n- [Select](https://x.dev/select.md)\n- [Insert](https://x.dev/insert.md)\n"
+        prose = "## Auth\nUse the bearerAuth middleware to guard a route before the handler runs.\n"
+        self.assertTrue(self.core.is_navigation_chunk(nav))
+        self.assertFalse(self.core.is_navigation_chunk(prose))
+
+    def test_navigation_chunks_rank_below_prose(self):
+        nav = "## Middleware index\n" + "".join(
+            f"- [middleware auth page {i}](https://x.dev/auth{i}.md)\n" for i in range(12)
+        )
+        prose = (
+            "## Middleware auth\n"
+            "Register the auth middleware before the route handler. "
+            "The middleware reads the auth cookie and rejects the request when it is absent.\n"
+        )
+        self.core.index_docs("demo", "1.0.0", nav, "2026-09-03")
+        self.core.index_docs("demo", "1.0.0", prose, "2026-09-03")
+        hits = self.core.search("middleware auth", libs=["demo"], limit=2)
+        self.assertTrue(hits)
+        self.assertIn("Register the auth middleware", hits[0]["text"])
+
+    def test_search_prefers_chunks_covering_every_term(self):
+        partial = "## Features\nUltrafast router. Lightweight. Batteries included middleware.\n"
+        full = "## Cookie auth\nThe auth middleware validates the signed cookies on each request.\n"
+        self.core.index_docs("demo", "1.0.0", partial, "2026-09-03")
+        self.core.index_docs("demo", "1.0.0", full, "2026-09-03")
+        hits = self.core.search("middleware auth cookies", libs=["demo"], limit=1)
+        self.assertTrue(hits)
+        self.assertIn("Cookie auth", hits[0]["title"])
+
+    def test_search_falls_back_to_partial_match_when_no_chunk_has_every_term(self):
+        self.core.index_docs("demo", "1.0.0", "## Routing\nThe router matches a path pattern.\n", "2026-09-03")
+        hits = self.core.search("router nonexistentterm", libs=["demo"], limit=2)
+        self.assertTrue(hits)
+
+    def test_parse_llms_links_resolves_relative_doc_pages(self):
+        text = "- [Select](/docs/select.md): rows\n- [Site](https://x.dev/)\n- [Abs](https://x.dev/a/insert.md)\n"
+        links = self.core.parse_llms_links(text, "https://x.dev/llms.txt")
+        self.assertEqual(
+            links,
+            [("Select", "https://x.dev/docs/select.md"), ("Abs", "https://x.dev/a/insert.md")],
+        )
+
+    def test_parse_llms_links_targets_markdown_for_extensionless_routes(self):
+        text = "- [Select](https://x.dev/docs/select)\n- [Logo](https://x.dev/logo.png)\n"
+        links = self.core.parse_llms_links(text, "https://x.dev/llms.txt")
+        self.assertEqual(links, [("Select", "https://x.dev/docs/select.md")])
+
+    def test_html_pages_are_never_indexed_as_documentation(self):
+        index = "# Docs\n- [Page](https://x.dev/p.md)\n"
+        html = "<!DOCTYPE html><html><head><title>Docs</title></head><body>" + "x" * 500
+        with mock.patch.object(self.core, "fetch_url", return_value=html):
+            pages = self.core._fetch_llms_pages(index, "https://x.dev/llms.txt", 50_000)
+        self.assertEqual(pages, [])
+
+    def test_llms_index_is_replaced_by_the_pages_it_points_at(self):
+        index = "# Docs\n" + "".join(f"- [Page {i}](https://x.dev/p{i}.md)\n" for i in range(6))
+        page = "# Page\n" + "The bearerAuth middleware guards the route. " * 12
+        with mock.patch.object(self.core, "fetch_url", return_value=page):
+            pages = self.core._fetch_llms_pages(index, "https://x.dev/llms.txt", 50_000)
+        self.assertTrue(pages)
+        self.assertTrue(all("bearerAuth" in page_source.text for page_source in pages))
+        self.assertTrue(all(page_source.url.endswith(".md") for page_source in pages))
+
+    def test_rank_doc_paths_prefers_guides_and_drops_boilerplate(self):
+        paths = [
+            "docs/CONTRIBUTING.md",
+            "docs/CODE_OF_CONDUCT.md",
+            "docs/guides/middleware.md",
+            "docs/i18n/zh/guide.md",
+            "node_modules/pkg/docs/a.md",
+            "README.md",
+        ]
+        ranked = self.core.rank_doc_paths(paths, [""])
+        self.assertEqual(ranked[0], "docs/guides/middleware.md")
+        for excluded in (
+            "README.md",
+            "docs/CONTRIBUTING.md",
+            "docs/CODE_OF_CONDUCT.md",
+            "docs/i18n/zh/guide.md",
+            "node_modules/pkg/docs/a.md",
+        ):
+            self.assertNotIn(excluded, ranked)
+
+    def test_separate_docs_repository_is_fetched_and_marked_live(self):
+        readme = self.core.DocSource(
+            "README.md",
+            "https://raw.githubusercontent.com/example/demo/v1.2.3/README.md",
+            "v1.2.3",
+            "# Demo\n" + "current API " * 30,
+        )
+        page = self.core.DocSource(
+            "docs/guide.md", "https://raw.githubusercontent.com/example/site/main/docs/guide.md", "main", "prose" * 100
+        )
+
+        def fake_tree(repo, prefixes, ref, budget):
+            return ([page], True) if repo == "example/site" else ([], True)
+
+        with mock.patch.object(self.core, "_fetch_repo_sources", return_value=[readme]):
+            with mock.patch.object(self.core, "_fetch_docs_tree", side_effect=fake_tree):
+                result = self.core.fetch_library(
+                    "demo",
+                    {"gh": "example/demo", "docs_gh": "example/site", "docs_branch": "main"},
+                    "1.2.3",
+                )
+        guide = [source for source in result.sources if source.name == "docs/guide.md"]
+        self.assertEqual(len(guide), 1)
+        self.assertEqual(guide[0].ref, "live")
+        self.assertTrue(result.exact_ref)
+
+    def test_docs_tree_network_failure_is_not_reported_as_missing_docs(self):
+        with mock.patch.object(self.core, "_github_tree", side_effect=RuntimeError("offline")):
+            sources, listed = self.core._fetch_docs_tree("example/demo", [""], "v1.0.0", 10_000)
+        self.assertEqual(sources, [])
+        self.assertFalse(listed)
+
+    def test_miss_states_cause_and_forbids_retrying_variants(self):
+        pack = self.core.context_pack(
+            "cookie auth middleware", pathlib.Path(self.tmp.name), libs=["demo"], limit=3
+        )
+        self.assertIn("RESULT: no matching documentation", pack)
+        self.assertIn("Do not retry reworded queries", pack)
+        self.assertIn("--sync-stale", pack)
+
 
 if __name__ == "__main__":
     unittest.main()

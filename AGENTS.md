@@ -47,9 +47,17 @@ An agent may claim a docs-grounded implementation only when:
 - generated code passes the repo's real tests
 - missing docs are stated instead of guessed
 
+## Miss Rule
+
+When a context pack starts with `RESULT: no matching documentation`, the local cache cannot answer the question. Rewording the query cannot change that.
+
+Run the `FIX` command shown in the block once. If the miss repeats, state that the API could not be verified against current docs and continue without inventing one.
+
 ## Do Not
 
 - Do not use Freshdocs as an infinite context dump.
 - Do not treat README snippets as stronger than local tests.
 - Do not hide stale or missing docs.
 - Do not add new default libraries without official source URLs.
+- Do not retry reworded queries after a reported miss; close the cache gap instead.
+- Do not present a `live-unversioned` docs page as if it were pinned to the project version.

@@ -48,12 +48,47 @@ The failure is expensive because the code looks plausible. The human only discov
 Freshdocs attacks that exact failure:
 
 - exact versions from project lockfiles
-- official README, changelog, `llms.txt`, and registry sources
+- prose from the repository's `docs/` tree, not just the README
+- `llms.txt` resolved into the pages it links to, instead of stored as a link list
+- navigation-heavy chunks ranked below real prose, so a query returns answers rather than a table of contents
 - local cache after sync
 - visible content-fetch date, source URL, and Git ref
 - compact prompt-ready output
 - CLI and Model Context Protocol (MCP) interface
 - optional source map for language, tool, and repo discovery
+
+### Answers, Not Tables Of Contents
+
+A README says what a library is; the `docs/` tree says how to use it. Indexing only the README is why a question about auth middleware can come back with a feature list. Freshdocs fetches the documentation tree, follows `llms.txt` links to their source pages, and ranks any chunk that is mostly links below real prose.
+
+Libraries whose prose lives in a separate website repository declare it once:
+
+```sh
+freshdocs add hono --gh honojs/hono --eco npm --docs-gh honojs/website
+```
+
+### Your Version, Not The Newest One
+
+`status` reports the newest version Freshdocs has checked. `context` reports the version
+your project actually installs, and serves documentation fetched at that release tag.
+
+So a project pinned to `ruff 0.14.14` gets `0.14.14` docs even while the cache also holds
+`0.16.6`. That difference is the point: an agent writing against your lockfile needs the
+API you have, not the API upstream shipped last week.
+
+### When Freshdocs Has Nothing
+
+A miss is reported as a cache gap with the command that closes it, and it tells the agent not to retry reworded queries against a cache that cannot answer them:
+
+```text
+RESULT: no matching documentation in the local cache.
+CAUSE: no cached chunk for hono matched this question.
+This is a cache gap, not a bad query. Do not retry reworded queries.
+FIX:
+  1. freshdocs context "cookie auth" --project . --sync-stale
+  2. if it still misses, the docs do not cover this API: say so instead of guessing
+Until then, state that the API could not be verified against current docs.
+```
 
 ## Quick Start
 

@@ -3,16 +3,16 @@
     "typescript": { "gh": "microsoft/TypeScript", "branch": "main", "eco": "npm", "pkg": "typescript" },
     "react": { "gh": "facebook/react", "branch": "main", "eco": "npm", "pkg": "react" },
     "bun": { "gh": "oven-sh/bun", "branch": "main", "eco": "npm", "pkg": "bun", "llms": "https://bun.sh/llms.txt" },
-    "hono": { "gh": "honojs/hono", "branch": "main", "eco": "npm", "pkg": "hono" },
-    "tailwindcss": { "gh": "tailwindlabs/tailwindcss", "branch": "main", "eco": "npm", "pkg": "tailwindcss" },
+    "hono": { "gh": "honojs/hono", "branch": "main", "eco": "npm", "pkg": "hono", "docs_gh": "honojs/website", "docs_branch": "main" },
+    "tailwindcss": { "gh": "tailwindlabs/tailwindcss", "branch": "main", "eco": "npm", "pkg": "tailwindcss", "docs_gh": "tailwindlabs/tailwindcss.com", "docs_branch": "main" },
     "zod": { "gh": "colinhacks/zod", "branch": "main", "eco": "npm", "pkg": "zod", "path": "packages/zod" },
     "vite": { "gh": "vitejs/vite", "branch": "main", "eco": "npm", "pkg": "vite", "path": "packages/vite" },
     "vitest": { "gh": "vitest-dev/vitest", "branch": "main", "eco": "npm", "pkg": "vitest" },
     "tanstack-query": { "gh": "TanStack/query", "branch": "main", "eco": "npm", "pkg": "@tanstack/react-query" },
-    "drizzle-orm": { "gh": "drizzle-team/drizzle-orm", "branch": "main", "eco": "npm", "pkg": "drizzle-orm", "llms": "https://orm.drizzle.team/llms.txt" },
-    "astro": { "gh": "withastro/astro", "branch": "main", "eco": "npm", "pkg": "astro", "path": "packages/astro" },
+    "drizzle-orm": { "gh": "drizzle-team/drizzle-orm", "branch": "main", "eco": "npm", "pkg": "drizzle-orm", "llms": "https://orm.drizzle.team/llms.txt", "docs_gh": "drizzle-team/drizzle-orm-docs", "docs_branch": "main" },
+    "astro": { "gh": "withastro/astro", "branch": "main", "eco": "npm", "pkg": "astro", "path": "packages/astro", "docs_gh": "withastro/docs", "docs_branch": "main" },
     "ai-sdk": { "gh": "vercel/ai", "branch": "main", "eco": "npm", "pkg": "ai", "path": "packages/ai" },
-    "biome": { "gh": "biomejs/biome", "branch": "main", "eco": "npm", "pkg": "@biomejs/biome", "path": "packages/@biomejs/biome" },
+    "biome": { "gh": "biomejs/biome", "branch": "main", "eco": "npm", "pkg": "@biomejs/biome", "path": "packages/@biomejs/biome", "docs_gh": "biomejs/website", "docs_branch": "main" },
     "tokio": { "gh": "tokio-rs/tokio", "branch": "master", "eco": "cargo", "pkg": "tokio", "path": "tokio" },
     "axum": { "gh": "tokio-rs/axum", "branch": "main", "eco": "cargo", "pkg": "axum", "path": "axum" },
     "ratatui": { "gh": "ratatui/ratatui", "branch": "main", "eco": "cargo", "pkg": "ratatui" },
@@ -26,4 +26,3 @@
     "polars": { "gh": "pola-rs/polars", "branch": "main", "eco": "pypi", "pkg": "polars" }
   }
 }
-

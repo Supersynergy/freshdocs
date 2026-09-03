@@ -52,6 +52,8 @@ def build_parser() -> argparse.ArgumentParser:
     add.add_argument("--pkg")
     add.add_argument("--path")
     add.add_argument("--llms")
+    add.add_argument("--docs-gh", help="separate docs repository, e.g. honojs/website")
+    add.add_argument("--docs-branch", default="main", help="branch of the docs repository")
 
     ctx = sub.add_parser("context", help="print a compact context pack for an agent prompt")
     ctx.add_argument("query")
@@ -146,7 +148,17 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def cmd_add(args: argparse.Namespace) -> int:
-    add_library(args.name, args.gh, args.eco, args.branch, args.pkg, args.path, args.llms)
+    add_library(
+        args.name,
+        args.gh,
+        args.eco,
+        args.branch,
+        args.pkg,
+        args.path,
+        args.llms,
+        args.docs_gh,
+        args.docs_branch,
+    )
     print(f"added {args.name} -> {args.gh}")
     return 0
 
