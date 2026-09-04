@@ -63,11 +63,27 @@ def cached_project_analysis(root: pathlib.Path, max_age_seconds: int = 300) -> d
     return analysis
 
 
-def routed_context(prompt: str, root: pathlib.Path, limit: int = 3) -> str:
+def routed_context(
+    prompt: str,
+    root: pathlib.Path,
+    limit: int = 3,
+    model: str | None = None,
+    metadata: dict | None = None,
+) -> str:
     if not FRESH_RISK.search(prompt) and not CODE_ACTION.search(prompt):
         return ""
     analysis = cached_project_analysis(root)
     if not needs_fresh_context(prompt, analysis):
         return ""
-    context = core.context_pack(prompt, root, limit=limit, sync_stale=False, analysis=analysis)
+    # Hook payloads commonly expose model/model_id/modelId. Let core validate and
+    # resolve those aliases so the user never has to duplicate the model on a CLI flag.
+    context = core.context_pack(
+        prompt,
+        root,
+        limit=limit,
+        sync_stale=False,
+        analysis=analysis,
+        model=model,
+        model_metadata=metadata,
+    )
     return f"<freshdocs>\n{context.strip()}\n</freshdocs>"[:6_000]

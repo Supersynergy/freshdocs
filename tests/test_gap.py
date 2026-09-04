@@ -75,6 +75,13 @@ class GapClassificationTests(unittest.TestCase):
     def test_unknown_model_resolves_to_no_cutoff(self):
         self.assertEqual(self.gap.resolve_cutoff("some-unlisted-model", {}), (None, None))
 
+    def test_model_name_containing_a_known_name_is_not_mistaken_for_it(self):
+        self.assertEqual(self.gap.resolve_cutoff("not-claude-sonnet-4-at-all", {}), (None, None))
+
+    def test_provider_qualified_profile_matches_providerless_runtime_id(self):
+        table = {"openai/gpt-5.6-sol": "2025-08-16"}
+        self.assertEqual(self.gap.resolve_cutoff("gpt-5.6-sol", table), ("openai/gpt-5.6-sol", "2025-08-16"))
+
     def test_registry_fetch_failure_yields_no_dates_rather_than_raising(self):
         def boom(url, *args, **kwargs):
             raise RuntimeError("offline")
@@ -190,6 +197,19 @@ class GapIntegrationTests(unittest.TestCase):
         model, matched, _ = self.core.model_cutoff(None)
         self.assertEqual(model, "claude-sonnet-4-5")
         self.assertEqual(matched, "claude-sonnet-4")
+
+    def test_shipped_measured_profiles_are_available_without_import(self):
+        measured = self.core.measured_cutoffs()
+        self.assertIn("claude-fable-5-1", measured)
+        self.assertIn("per_library", measured["claude-fable-5-1"])
+
+    def test_local_probe_overrides_same_shipped_profile(self):
+        self.core.record_measured_cutoff(
+            "claude-fable-5-1", "2026-01-02", {"hono": "2025-12-03"}, "local-test"
+        )
+        record = self.core.measured_cutoffs()["claude-fable-5-1"]
+        self.assertEqual(record["cutoff"], "2026-01-02")
+        self.assertEqual(record["source"], "local-test")
 
     def test_covered_libraries_shrink_the_pack_without_emptying_it(self):
         root = pathlib.Path(self.tmp.name) / "proj"
@@ -323,14 +343,14 @@ class GapIntegrationTests(unittest.TestCase):
         self.assertEqual(payload["verdicts"][0]["status"], "ahead")
         self.assertTrue(payload["verdicts"][0]["needs_full_context"])
 
-    def test_gap_command_without_a_model_is_an_error(self):
+    def test_gap_command_without_a_model_fails_safe_instead_of_erroring(self):
         import freshdocs.cli as cli
 
-        err = io.StringIO()
-        with contextlib.redirect_stderr(err):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
             code = cli.main(["gap", "--project", self.tmp.name])
-        self.assertEqual(code, 2)
-        self.assertIn("no model given", err.getvalue())
+        self.assertEqual(code, 0)
+        self.assertIn("fail-safe", out.getvalue())
 
     def test_models_set_rejects_a_malformed_cutoff(self):
         import freshdocs.cli as cli

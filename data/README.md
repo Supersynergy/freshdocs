@@ -1,16 +1,17 @@
 # Measured model cutoffs
 
-`model_cutoffs.json` is the database behind `freshdocs models --import`. Every entry is
-the result of the same probe: ask the model, from memory, for the newest released
-version it knows of each of 20 libraries, then check every answer against the package
-registry. The cutoff is the median publication date of the verified answers.
-
-Nothing in this file is copied from a vendor page.
+`model_cutoffs.json` is the raw evidence database shipped inside Freshdocs. Every entry
+comes from the same probe: ask the model, from memory, for the newest released version
+it knows of each of 20 libraries, then check every answer against the package registry.
+The cutoff is the median publication date of verified answers. Operational profiles are
+derived and merged into the local registry automatically; users do not import this file.
+Nothing here is copied from a vendor page.
 
 ## Results, 2026-09-04
 
 | Model | Measured cutoff | Verified | Hallucinated | Notes |
 |---|---|---|---|---|
+| openai/gpt-5.6-sol | **2025-08-16** | 20/20 | 0 | self-probe, main session |
 | claude-fable-5-1 | 2025-06-11 | 20/20 | 0 | self-probe, main session |
 | claude-fable-5-1 (subagent, recall prompt) | 2025-05-16 | 20/20 | 0 | fresh context |
 | claude-fable-5-1 (subagent, strict prompt) | 2024-05-02 | 20/20 | 0 | same model, see below |
@@ -34,11 +35,11 @@ token budget without answering; `thinkingmachines/inkling*` is gated (HTTP 403);
 
 ## What the numbers mean
 
-**Every measured cutoff is well behind the model's release date.** Models shipped in
-mid-2026 recall library versions from late 2023 to mid-2025. For a coding agent that is
-the number that matters: a library released in 2026 is a training gap for all of them,
-and `freshdocs context --model` loads its documentation while skipping libraries the
-model demonstrably knows.
+**Every measured cutoff is well behind the model's release date.** Models available in
+2026 recalled library versions from late 2023 to September 2025. For a coding agent that
+is the number that matters: a library released in 2026 is a training gap for every model
+measured here, and `freshdocs context` loads its documentation while reducing libraries
+the model demonstrably knows to source pointers.
 
 **The median is deliberately conservative.** Per-library dates for the same model span
 up to eighteen months (claude-fable-5-1: ratatui 2024-10-21, biome 2025-06-27). The
@@ -69,6 +70,7 @@ context, which is one more reason to keep the safety margin and let `--cutoff` o
 
 ```sh
 OPENROUTER_API_KEY=... python tools/cutoff_bench.py --free      # all :free models, $0
-freshdocs models --import data/model_cutoffs.json
-freshdocs models --probe                                          # measure yourself
+freshdocs models --probe                                         # measure yourself
 ```
+
+A local probe is stored automatically and overrides shipped evidence for that exact id.

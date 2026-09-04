@@ -50,19 +50,24 @@ An agent may claim a docs-grounded implementation only when:
 
 ## Gap Rule
 
-Measure your own cutoff once per model, then pass your model id on every call:
+Freshdocs detects your model from hook/MCP metadata, provider model environment, or a
+known agent's `--model` argument. Do not repeat a model id on every call:
 
 ```sh
-freshdocs models --probe                       # answer the question from memory, honestly
-freshdocs models --record "$YOUR_MODEL_ID" '<your JSON answer>'
-freshdocs context "$USER_TASK" --project . --model "$YOUR_MODEL_ID" --sync-stale
+freshdocs models --probe                  # answer once, honestly, from memory
+freshdocs models --record '<your JSON answer>'
+freshdocs context "$USER_TASK" --project . --sync-stale
 ```
 
-Answer the probe with your best recollection. Do not deflate it to seem safe: an
-answer that is a year too conservative costs every later prompt documentation you did
-not need, while an invented version is caught by the registry check and simply does not
-count. If your model id is unknown and you skip the probe, every library is loaded in
-full, which is safe but not cheap.
+For MCP, call `freshdocs_identity` first. If the host exposed the model and a measured
+profile exists, proceed without a model argument. If an older host omitted identity,
+include your exact model id on one `freshdocs_probe` or `freshdocs_context` call; the
+server retains it for the session.
+
+Answer the probe with your best recollection. Do not deflate it to seem safe: an answer
+that is a year too conservative wastes context on every later prompt, while an invented
+version is rejected by the registry. If identity or a trustworthy profile is missing,
+Freshdocs loads every relevant library in full. This is intentionally safe, not cheap.
 
 The pack then states a verdict per library. Read it as an instruction:
 

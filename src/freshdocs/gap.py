@@ -118,20 +118,30 @@ def parse_date(value: str | None) -> dt.date | None:
             return None
 
 
-def resolve_cutoff(model: str | None, overrides: dict[str, str] | None = None) -> tuple[str | None, str | None]:
-    """Return (matched model key, cutoff date) using longest-prefix matching.
+def model_key_matches(model: str, key: str) -> bool:
+    """Match exact ids or dated/quantized descendants, never arbitrary substrings."""
+    def clean(value: str) -> str:
+        return re.sub(r"[^a-z0-9./]+", "-", value.lower()).strip("-")
 
-    Model identifiers carry vendor prefixes, dates and quantisation suffixes, so an
-    exact lookup would miss almost every real name. The longest matching prefix wins,
-    which keeps `claude-sonnet-4-5` from matching a broader `claude-3` entry.
-    """
+    needle, candidate = clean(model), clean(key)
+    if not needle or not candidate:
+        return False
+    # Gateways commonly prefix provider/name. Match both the full id and its model
+    # basename, but require the profile key to begin the candidate. This accepts
+    # anthropic/claude-sonnet-4-5-20260101 while rejecting not-claude-sonnet-4.
+    forms = {needle, needle.rsplit("/", 1)[-1]}
+    keys = {candidate, candidate.rsplit("/", 1)[-1]}
+    return any(form == key or form.startswith(key + "-") for form in forms for key in keys)
+
+
+def resolve_cutoff(model: str | None, overrides: dict[str, str] | None = None) -> tuple[str | None, str | None]:
+    """Return (matched model key, cutoff date) using longest-prefix matching."""
     if not model:
         return None, None
     table = {**DEFAULT_MODEL_CUTOFFS, **(overrides or {})}
-    needle = re.sub(r"[^a-z0-9.-]+", "-", model.lower())
     best: tuple[str, str] | None = None
     for key, cutoff in table.items():
-        if key in needle and (best is None or len(key) > len(best[0])):
+        if model_key_matches(model, key) and (best is None or len(key) > len(best[0])):
             best = (key, cutoff)
     return best if best else (None, None)
 

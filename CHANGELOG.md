@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0 - 2026-09-04
+
+- Added conservative automatic model discovery from hook/MCP metadata, provider-specific model environment variables, and the argv/configuration of positively identified parent agents.
+- Added ambiguity protection: conflicting provider selectors, malformed ids, unknown models, and hosts that expose no identity all retain full documentation.
+- Added an MCP identity handshake and `freshdocs_identity`; clients may send `_meta.model` or `capabilities.experimental.freshdocs.model`, legacy clients only identify once per stdio session, and a later identity conflict permanently forces safe/full mode for that connection.
+- Changed hooks to consume common `model`, `model_id`, and `modelId` payload fields automatically instead of requiring duplicate CLI configuration.
+- Bundled registry-verified measured profiles into the wheel and merge them into existing registries per model; a fresh install no longer needs `models --import`, while a local probe still wins.
+- Changed `models --record` to use the auto-detected model when given only an answer, while retaining the two-argument compatibility form.
+- Added the `openai/gpt-5.6-sol` self-probe: 20/20 versions verified, zero hallucinations, measured median cutoff 2025-08-16, with 20 per-library dates.
+- Tightened model-profile matching from arbitrary substring matching to exact or descendant ids, preventing an unrelated name containing a known model from suppressing documentation.
+
 ## 0.5.0 - 2026-09-04
 
 - Added a knowledge-cutoff probe: `freshdocs models --probe` asks a model for the newest release it knows of each of 20 libraries, `--record` checks every answer against the package registry and stores the median release date as the measured cutoff together with per-library dates.

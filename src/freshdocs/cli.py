@@ -9,6 +9,7 @@ import sys
 
 from . import __version__
 from .core import (
+    active_model_info,
     add_library,
     cached_release_dates,
     context_pack,
@@ -79,7 +80,7 @@ def build_parser() -> argparse.ArgumentParser:
     ctx.add_argument("--lib", action="append", help="library name; repeatable")
     ctx.add_argument("--limit", type=int, default=6)
     ctx.add_argument("--sync-stale", action="store_true")
-    ctx.add_argument("--model", help="target model id; loads only what its training cannot cover")
+    ctx.add_argument("--model", help="override auto-detected model id")
     ctx.add_argument("--cutoff", help="override the model's training cutoff, YYYY-MM-DD")
 
     srch = sub.add_parser("search", help="search cached docs")
@@ -104,7 +105,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     gap = sub.add_parser("gap", help="show which libraries a model's training cannot cover")
     gap.add_argument("--project", default=".")
-    gap.add_argument("--model", help="target model id; defaults to $FRESHDOCS_MODEL")
+    gap.add_argument("--model", help="override auto-detected model id")
     gap.add_argument("--cutoff", help="override the model's training cutoff, YYYY-MM-DD")
     gap.add_argument("--json", action="store_true")
 
@@ -113,9 +114,9 @@ def build_parser() -> argparse.ArgumentParser:
     models.add_argument("--probe", action="store_true", help="print the knowledge probe for the calling model to answer")
     models.add_argument(
         "--record",
-        nargs=2,
-        metavar=("MODEL", "ANSWER_JSON"),
-        help="score a probe answer (JSON string or @file) and record the measured cutoff",
+        nargs="+",
+        metavar="VALUE",
+        help="score ANSWER_JSON for the auto-detected model; MODEL ANSWER_JSON remains compatible",
     )
     models.add_argument("--import", dest="import_path", metavar="FILE", help="import a cutoff_bench.py database")
     models.add_argument("--json", action="store_true")
@@ -145,21 +146,24 @@ def cmd_init() -> int:
 def cmd_gap(args: argparse.Namespace) -> int:
     root = pathlib.Path(args.project).expanduser().resolve()
     versions = detected_versions(project_analysis(root))
-    model, matched, cutoff = model_cutoff(args.model, args.cutoff)
-    if not model:
-        print("no model given: pass --model or set FRESHDOCS_MODEL", file=sys.stderr)
-        return 2
+    identity = active_model_info(args.model)
+    model, matched, cutoff = model_cutoff(identity.model, args.cutoff)
     verdicts = gap_verdicts(versions, model, args.cutoff)
     if args.json:
         print(json.dumps({
             "model": model,
+            "detection_source": identity.source,
             "matched": matched,
             "cutoff": cutoff,
+            "fail_safe": model is None or cutoff is None,
             "verdicts": [verdict.as_dict() for verdict in verdicts],
         }, indent=1))
         return 0
-    origin = f"matched {matched}" if matched else "no cutoff known"
-    print(f"model: {model} ({origin}, cutoff {cutoff or 'unknown'})")
+    if model:
+        origin = f"matched {matched}" if matched else "no cutoff known"
+        print(f"model: {model} (auto source {identity.source}; {origin}, cutoff {cutoff or 'unknown'})")
+    else:
+        print("model: not exposed by host (fail-safe: every library is loaded)")
     if not verdicts:
         print("no project libraries with exact versions were detected")
         return 0
@@ -186,14 +190,30 @@ def cmd_models(args: argparse.Namespace) -> int:
         return 0
 
     if args.probe:
+        identity = active_model_info()
         print(bench.build_prompt())
         print()
-        print("# Answer from memory, then record it:")
-        print("#   freshdocs models --record <your-model-id> '<the JSON you produced>'")
+        if identity.model:
+            print(f"# Active model auto-detected as {identity.model} via {identity.source}.")
+            print("# Answer from memory, then record it without repeating the model:")
+            print("#   freshdocs models --record '<the JSON you produced>'")
+        else:
+            print("# The host did not expose its model. Answer from memory, then record with:")
+            print("#   freshdocs models --record <your-model-id> '<the JSON you produced>'")
         return 0
 
     if args.record:
-        model, raw = args.record
+        if len(args.record) == 1:
+            identity = active_model_info()
+            if not identity.model:
+                print("active model was not exposed; use --record MODEL ANSWER_JSON once", file=sys.stderr)
+                return 2
+            model, raw = identity.model, args.record[0]
+        elif len(args.record) == 2:
+            model, raw = args.record
+        else:
+            print("--record accepts ANSWER_JSON or MODEL ANSWER_JSON", file=sys.stderr)
+            return 2
         if raw.startswith("@"):
             raw = pathlib.Path(raw[1:]).read_text()
         answers = bench.parse_answer(raw)
@@ -404,7 +424,9 @@ def cmd_hook(args: argparse.Namespace) -> int:
         payload = {}
     prompt = str(payload.get("prompt") or payload.get("user_prompt") or payload.get("message") or "")
     root = pathlib.Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
-    context = routed_context(prompt, root, args.limit)
+    # Hooks already carry the active model in common model/model_id/modelId fields.
+    # Forward the payload as evidence instead of requiring duplicate configuration.
+    context = routed_context(prompt, root, args.limit, metadata=payload)
     if not context:
         return 0
     if args.client == "raw":

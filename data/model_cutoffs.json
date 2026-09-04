@@ -3442,6 +3442,220 @@
    "note": "subagent owl, strict prompt v1",
    "prompt_version": 1,
    "source": "anthropic-subagent"
+  },
+  "openai/gpt-5.6-sol": {
+   "model": "openai/gpt-5.6-sol",
+   "cutoff": "2025-08-16",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2025-07-28",
+    "typescript": "2025-07-31",
+    "vite": "2025-08-19",
+    "vitest": "2025-06-17",
+    "hono": "2025-08-22",
+    "zod": "2025-08-28",
+    "tailwindcss": "2025-08-14",
+    "astro": "2025-08-29",
+    "bun": "2025-08-25",
+    "drizzle-orm": "2025-08-25",
+    "biome": "2025-08-23",
+    "fastapi": "2025-07-11",
+    "pydantic": "2025-06-14",
+    "polars": "2025-08-14",
+    "ruff": "2025-08-21",
+    "uv": "2025-08-28",
+    "tokio": "2025-08-01",
+    "axum": "2025-04-30",
+    "ratatui": "2024-10-21",
+    "tauri": "2025-09-01"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.1.1",
+     "exists": true,
+     "released": "2025-07-28",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 358
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.9.2",
+     "exists": true,
+     "released": "2025-07-31",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 342
+    },
+    {
+     "lib": "vite",
+     "claimed": "7.1.3",
+     "exists": true,
+     "released": "2025-08-19",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 366
+    },
+    {
+     "lib": "vitest",
+     "claimed": "3.2.4",
+     "exists": true,
+     "released": "2025-06-17",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 443
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.9.4",
+     "exists": true,
+     "released": "2025-08-22",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 369
+    },
+    {
+     "lib": "zod",
+     "claimed": "4.1.5",
+     "exists": true,
+     "released": "2025-08-28",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 366
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "4.1.12",
+     "exists": true,
+     "released": "2025-08-14",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 336
+    },
+    {
+     "lib": "astro",
+     "claimed": "5.13.5",
+     "exists": true,
+     "released": "2025-08-29",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 370
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.2.21",
+     "exists": true,
+     "released": "2025-08-25",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 375
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.44.5",
+     "exists": true,
+     "released": "2025-08-25",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 214
+    },
+    {
+     "lib": "biome",
+     "claimed": "2.2.2",
+     "exists": true,
+     "released": "2025-08-23",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 376
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.116.1",
+     "exists": true,
+     "released": "2025-07-11",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 383
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.11.7",
+     "exists": true,
+     "released": "2025-06-14",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 440
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.32.3",
+     "exists": true,
+     "released": "2025-08-14",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 377
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.12.10",
+     "exists": true,
+     "released": "2025-08-21",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 378
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.8.14",
+     "exists": true,
+     "released": "2025-08-28",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 369
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.47.1",
+     "exists": true,
+     "released": "2025-08-01",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 353
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.8.4",
+     "exists": true,
+     "released": "2025-04-30",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 349
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.29.0",
+     "exists": true,
+     "released": "2024-10-21",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 606
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.8.5",
+     "exists": true,
+     "released": "2025-09-01",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 303
+    }
+   ],
+   "source": "openai-self-probe",
+   "recorded": "2026-09-04"
   }
  },
  "prompt_comparison": {

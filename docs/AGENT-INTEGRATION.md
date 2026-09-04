@@ -75,11 +75,24 @@ All variants read a JSON event from standard input. Supported fields are `prompt
 
 Tools:
 
+- `freshdocs_identity`: detected model, matched profile, and safe-full/gap-aware mode
 - `freshdocs_analyze`: languages, manifests, dependencies, and exact lockfile versions
-- `freshdocs_context`: compact docs pack for the exact project versions
+- `freshdocs_context`: gap-budgeted docs pack for the exact project versions
+- `freshdocs_gap`: structured per-library coverage verdicts
+- `freshdocs_probe`: registry-verified one-time model knowledge measurement
 - `freshdocs_search`: narrow local cache search
 - `freshdocs_sync`: refresh one registered library, optionally at an exact version
 - `freshdocs_detect`: registered libraries used by the project
+
+### Automatic model identity
+
+MCP does not define a standard active-model field. A capable client should send its exact
+model id as `params._meta.model` or negotiate
+`capabilities.experimental.freshdocs.model` during initialization. Freshdocs also accepts
+common `model`, `model_id`, and `modelId` metadata aliases. If a legacy client cannot send
+metadata, provide the id on one tool call; the stdio server retains it for the session.
+A conflicting later identity cannot replace it: the connection locks into safe-full mode.
+An absent, ambiguous, or unknown identity always selects full documentation.
 
 ## Adaptive Freshness
 

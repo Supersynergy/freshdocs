@@ -81,39 +81,47 @@ API you have, not the API upstream shipped last week.
 A model that was trained on `hono 4.13.5` does not need its documentation pasted back.
 The expensive case is the opposite one, and there are two of them.
 
-Tell Freshdocs which model is reading, and it compares each installed version's
-publication date against that model's training cutoff:
+Freshdocs identifies the active model automatically, then compares every installed
+version with that model's measured knowledge profile:
 
 ```sh
-freshdocs gap --project . --model claude-sonnet-4-5
+freshdocs gap --project .          # no --model required
+freshdocs context "bearer auth" --project . --sync-stale
 ```
 
 ```text
-model: claude-sonnet-4-5 (matched claude-sonnet-4, cutoff 2025-01-01)
-  LOAD  hono               4.13.5   training gap (released 2026-08-26, after cutoff 2025-01-01)
-  skip  zod                3.22.4   covered by training (released 2023-08-01, cutoff 2025-01-01)
+model: gpt-5.6-sol (auto source env:OPENAI_MODEL; matched measured:openai/gpt-5.6-sol, cutoff 2025-08-16)
+  LOAD  hono   4.13.5  training gap (released after measured hono knowledge)
+  skip  zod    4.1.5   covered by training
 ```
 
 | Verdict | Meaning | Action |
 |---|---|---|
 | `ahead` | Released after the cutoff. The model cannot know it. | full context |
-| `behind` | The project pins an older release than the model most likely learned, so it may write an API that exists upstream but not here. | full context |
+| `behind` | The project pins an older release than the model learned, so memory may use a newer API. | full context |
 | `covered` | The model's knowledge and the project agree. | one pointer: header and source URL, no prose |
 | `unknown` | Any input is missing. | full context, with the reason |
 
-Pass `--model` to `context` and the pack carries the same reasoning, spends its budget
-on the gaps, and `--sync-stale` refetches only those libraries instead of all of them:
+Detection precedence is explicit override, hook/MCP metadata, provider model environment,
+then a known agent's `--model` argument or its own active configuration. Supported metadata aliases
+include `model`, `model_id`, and `modelId`; common provider variables such as
+`OPENAI_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_MODEL`, and `OPENROUTER_MODEL` work without
+Freshdocs-specific setup. Conflicting environment selectors are considered ambiguous,
+not guessed.
 
-```sh
-freshdocs context "bearer auth" --project . --model claude-sonnet-4-5 --sync-stale
-export FRESHDOCS_MODEL=claude-sonnet-4-5   # or set it once
-```
+MCP itself does **not** standardize the active model identity. Freshdocs accepts
+`params._meta.model` and the negotiated
+`capabilities.experimental.freshdocs.model` extension. Older clients can supply the model
+on one tool call; the server remembers it for that MCP session, so it is not repeated.
+A contradictory later identity locks that connection into fail-safe full context.
+If a host exposes nothing, Freshdocs says so once and loads the complete context. `--model`
+and `FRESHDOCS_MODEL` remain optional overrides, never requirements.
 
-Measured on a four-library project with a probed model (`claude-fable-5-1`, see below):
+Measured on a four-library project with a probed model:
 
 | Situation | Hits | Approx. tokens |
 |---|---|---|
-| no `--model` | 8 | 2430 |
+| identity unavailable, fail-safe full context | 8 | 2430 |
 | one library is a gap, three are covered | 5 full + pointers | 1700 |
 | every library is covered | 1 pointer | 240 |
 
@@ -123,38 +131,43 @@ query words cannot crowd it out.
 
 #### Measure the cutoff instead of guessing it
 
-A vendor's published cutoff is one month for the whole model. What matters is narrower
-and measurable: for each library, which release is the newest the model can name
-correctly? Freshdocs asks, checks every answer against the package registry, and
+A vendor's published cutoff is one coarse date for the whole model. What matters is
+narrower and measurable: for each library, which release is the newest the model can
+name correctly? Freshdocs asks, checks every answer against the package registry, and
 records the result.
 
 ```sh
-freshdocs models --probe                 # prints the question; answer it from memory
-freshdocs models --record <model-id> '<the JSON you produced>'
+freshdocs models --probe                 # identity is detected and printed
+freshdocs models --record '<the JSON you produced>'
 ```
 
+If an older host exposes no identity, add the model id only on that one record call. MCP
+uses the same two-call flow with `freshdocs_probe` and retains the identity for the
+session.
+
 ```text
-model: claude-fable-5-1
-cutoff: 2025-06-11  (median release date of 20 verified answers)
+model: openai/gpt-5.6-sol
+cutoff: 2025-08-16  (median release date of 20 verified answers)
 verified 20  hallucinated 0  unanswered 0
-  ok  hono           4.7.11 released 2025-05-31, 452d behind 4.13.5
-  ok  ratatui        0.29.0 released 2024-10-21, 606d behind 0.30.2
+  ok  hono           4.9.4 released 2025-08-22
+  ok  ratatui        0.29.0 released 2024-10-21
   ...
-recorded: claude-fable-5-1 -> 2025-06-11 (20 libraries measured)
+recorded: openai/gpt-5.6-sol -> 2025-08-16 (20 libraries measured)
 ```
 
 Two things make this better than a date from a web page. The cutoff is the **median**,
 so one lucky late answer cannot pull it forward and suppress documentation the model
 needs. And the **per-library dates are kept**: coverage is uneven, and a model that
-knows polars to June may know ratatui only to the previous October. Gap detection uses
+knows zod to August may know ratatui only to the previous October. Gap detection uses
 the per-library date wherever one was measured.
 
-Precedence is `--cutoff` (your word) > measured probe > `models --set` > shipped table.
-Measured beats manual because it is evidence about this model, not a number copied
-from a vendor page. An MCP client does the same in two calls to `freshdocs_probe`.
+Registry-verified profiles ship inside the package and merge automatically on upgrade;
+there is no separate `models --import` setup step. A local probe overrides the shipped
+record only for that exact model id. Precedence is `--cutoff` (your word) > measured
+probe > `models --set` > approximate fallback table.
 
-`tools/cutoff_bench.py` runs the probe across OpenRouter models and writes a database
-that `freshdocs models --import` reads. The shipped table remains as a last resort:
+`tools/cutoff_bench.py` runs the same probe across OpenRouter models and writes the raw
+evidence database. List the effective measured profiles and fallbacks with:
 
 ```sh
 freshdocs models                              # measured, overrides, defaults

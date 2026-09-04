@@ -18,7 +18,8 @@ from typing import Any
 
 from . import __version__
 from .analyzer import analyze_project, detected_versions
-from .gap import GapVerdict, classify, release_dates, resolve_cutoff, summarise
+from .gap import GapVerdict, classify, model_key_matches, release_dates, resolve_cutoff, summarise
+from .identity import ModelIdentity, detect_model
 
 APP_DIR = pathlib.Path(os.environ.get("FRESHDOCS_HOME", pathlib.Path.home() / ".freshdocs"))
 REGISTRY_PATH = pathlib.Path(os.environ.get("FRESHDOCS_REGISTRY", APP_DIR / "registry.json"))
@@ -127,9 +128,40 @@ def write_json(path: pathlib.Path, data: dict[str, Any]) -> None:
             temporary.unlink()
 
 
+def _shipped_measured_cutoffs() -> dict[str, dict[str, Any]]:
+    """Compact operational profiles derived from shipped benchmark evidence."""
+    packaged = resources.files("freshdocs").joinpath("model_cutoffs.json")
+    candidates = [packaged, pathlib.Path(__file__).resolve().parents[2] / "data" / "model_cutoffs.json"]
+    payload: dict[str, Any] = {}
+    for candidate in candidates:
+        try:
+            with candidate.open("r", encoding="utf-8") as f:
+                payload = json.load(f)
+            break
+        except (FileNotFoundError, OSError, json.JSONDecodeError):
+            continue
+    profiles: dict[str, dict[str, Any]] = {}
+    for model, record in (payload.get("probed") or {}).items():
+        # @variants document prompt/context experiments and must never match live ids.
+        if "@" in model or not isinstance(record, dict) or not record.get("cutoff"):
+            continue
+        per_library = record.get("per_library")
+        if not isinstance(per_library, dict):
+            continue
+        profiles[str(model)] = {
+            "cutoff": str(record["cutoff"]),
+            "per_library": {str(k): str(v) for k, v in per_library.items()},
+            "source": str(record.get("source") or "shipped-registry-verified-probe"),
+            "recorded": str(record.get("recorded") or "shipped"),
+        }
+    return profiles
+
+
 def default_registry() -> dict[str, Any]:
     with resources.files("freshdocs").joinpath("default_registry.json").open("r", encoding="utf-8") as f:
-        return json.load(f)
+        registry = json.load(f)
+    registry["models_measured"] = _shipped_measured_cutoffs()
+    return registry
 
 
 def ensure_registry() -> dict[str, Any]:
@@ -148,10 +180,19 @@ def ensure_registry() -> dict[str, Any]:
     for name, entry in current.get("libs", {}).items():
         base = libs.get(name)
         libs[name] = {**base, **entry} if isinstance(base, dict) and isinstance(entry, dict) else entry
-    # Anything else the user stored here, such as model cutoff overrides, is theirs to
-    # keep. Rebuilding the file from the shipped defaults must never silently drop it.
+    # Anything else the user stored here is theirs to keep. Measured profiles merge
+    # per model so new shipped evidence reaches existing installs while local probes
+    # override the shipped record for exactly the same model id.
     for key, value in current.items():
-        if key not in {"libs", "_migrations"}:
+        if key in {"libs", "_migrations"}:
+            continue
+        if key == "models_measured" and isinstance(value, dict):
+            base = merged.setdefault(key, {})
+            if isinstance(base, dict):
+                base.update(value)
+            else:
+                merged[key] = value
+        else:
             merged.setdefault(key, value)
     if migrations:
         merged["_migrations"] = migrations
@@ -954,6 +995,7 @@ def context_pack(
     analysis: dict[str, Any] | None = None,
     model: str | None = None,
     cutoff: str | None = None,
+    model_metadata: dict[str, Any] | None = None,
 ) -> str:
     reg = ensure_registry()["libs"]
     analysis = analysis or analyze_project(root, reg)
@@ -1000,12 +1042,22 @@ def context_pack(
     gap_notes: list[str] = []
     verdicts: list[GapVerdict] = []
     needs_docs: set[str] | None = None
-    model_name = active_model(model)
-    if model_name:
+    identity = active_model_info(model, model_metadata)
+    model_name = identity.model
+    if model_name or cutoff:
         verdicts = gap_verdicts(selected_versions, model_name, cutoff)
         needs_docs = {v.lib for v in verdicts if v.needs_full_context}
-        gap_notes.append(f"model: {model_name} ({summarise(verdicts)})")
+        shown_model = model_name or "cutoff override"
+        auto = f", auto-detected via {identity.source}" if model_name and identity.source != "explicit" else ""
+        gap_notes.append(f"model: {shown_model}{auto} ({summarise(verdicts)})")
         gap_notes.extend(f"  {v.lib} {v.version}: {v.label()}" for v in verdicts)
+    elif selected_versions:
+        # Model identity is not part of standard MCP today. If the host did not expose
+        # it through metadata, environment, or argv, classify everything as unknown
+        # rather than silently assuming the model can cover a release.
+        verdicts = gap_verdicts(selected_versions, None, None)
+        needs_docs = set(selected_versions)
+        gap_notes.append("model: not exposed by host; fail-safe full context (no documentation suppressed)")
 
     if sync_stale:
         for lib in selected:
@@ -1195,8 +1247,14 @@ def cached_release_dates(name: str, meta: dict[str, Any], refresh: bool = False)
     return dates
 
 
-def active_model(model: str | None = None) -> str | None:
-    return model or os.environ.get("FRESHDOCS_MODEL") or None
+def active_model_info(model: str | None = None, metadata: dict[str, Any] | None = None) -> ModelIdentity:
+    """Return the active model plus the evidence channel that identified it."""
+    return detect_model(model, metadata=metadata)
+
+
+def active_model(model: str | None = None, metadata: dict[str, Any] | None = None) -> str | None:
+    """Compatibility wrapper returning only the exact model id, if discoverable."""
+    return active_model_info(model, metadata).model
 
 
 MEASURED_KEY = "models_measured"
@@ -1228,11 +1286,9 @@ def record_measured_cutoff(model: str, cutoff: str, per_library: dict[str, str],
 def _match_measured(model: str | None) -> tuple[str | None, dict[str, Any] | None]:
     if not model:
         return None, None
-    needle = re.sub(r"[^a-z0-9.-]+", "-", model.lower())
     best: tuple[str, dict[str, Any]] | None = None
     for key, rec in measured_cutoffs().items():
-        k = re.sub(r"[^a-z0-9.-]+", "-", key.lower())
-        if k in needle and (best is None or len(k) > len(best[0])):
+        if model_key_matches(model, key) and (best is None or len(key) > len(best[0])):
             best = (key, rec)
     return best if best else (None, None)
 
@@ -1285,7 +1341,7 @@ def gap_verdicts(
 ) -> list[GapVerdict]:
     """Classify each (library, version) against the model's training cutoff."""
     reg = ensure_registry()["libs"]
-    _, _, resolved_cutoff = model_cutoff(model, cutoff)
+    resolved_model, _, resolved_cutoff = model_cutoff(model, cutoff)
     verdicts: list[GapVerdict] = []
     for lib, version in sorted(libs.items()):
         meta = reg.get(lib)
@@ -1295,7 +1351,7 @@ def gap_verdicts(
         # An explicit --cutoff is the caller's word and applies uniformly.
         lib_cutoff, origin = resolved_cutoff, "model"
         if not cutoff:
-            lib_cutoff, origin = library_cutoff(model, lib, resolved_cutoff)
+            lib_cutoff, origin = library_cutoff(resolved_model, lib, resolved_cutoff)
         dates = cached_release_dates(lib, meta) if lib_cutoff else {}
         verdicts.append(classify(lib, version, dates, lib_cutoff, measured=(origin == "measured")))
     return verdicts
@@ -1373,20 +1429,26 @@ def doctor() -> tuple[int, list[str]]:
 
 def _gap_health() -> list[str]:
     """Report whether gap-aware retrieval is active, and prove it fails safe."""
-    model, matched, cutoff = model_cutoff(None)
+    identity = active_model_info()
+    model, matched, cutoff = model_cutoff(identity.model)
     if not model:
-        return ["gap mode: off (set FRESHDOCS_MODEL or pass --model to load only training gaps)"]
+        detail = f" ({identity.detail})" if identity.detail else ""
+        return [
+            f"gap mode: safe/full (active model was not exposed by the host{detail})",
+            "  automatic sources: hook/MCP metadata, provider environment, known agent argv/config",
+            "  no documentation will be suppressed",
+        ]
     if not cutoff:
         return [
-            f"gap mode: on for {model}, but no cutoff is known",
-            "  every library will be loaded in full; record one with: freshdocs models --set <model> <YYYY-MM-DD>",
+            f"gap mode: safe/full for {model}, auto-detected via {identity.source}, but no cutoff is known",
+            "  every library will be loaded in full; measure once with: freshdocs models --probe",
         ]
     # A missing publication date must never be read as "old enough to skip".
     probe = classify("__probe__", "1.0.0", {}, cutoff)
     if not probe.needs_full_context:
         return [f"gap mode: BROKEN for {model}: missing release data did not fail safe"]
     return [
-        f"gap mode: on for {model} (matched {matched}, cutoff {cutoff})",
+        f"gap mode: on for {model} (auto-detected via {identity.source}; matched {matched}, cutoff {cutoff})",
         "  unknown release dates fail safe to a full context pack",
     ]
 
