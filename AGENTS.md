@@ -48,6 +48,22 @@ An agent may claim a docs-grounded implementation only when:
 - generated code passes the repo's real tests
 - missing docs are stated instead of guessed
 
+## Gap Rule
+
+Pass your own model id so Freshdocs loads only what your training cannot cover:
+
+```sh
+freshdocs context "$USER_TASK" --project . --model "$YOUR_MODEL_ID" --sync-stale
+```
+
+The pack then states a verdict per library. Read it as an instruction:
+
+- `training gap` and `pinned behind training`: you do not reliably know this API. Use the snippets, not your memory.
+- `covered by training`: your memory and the project agree. The short confirmation is deliberate; do not ask for more.
+- `unverified`: coverage could not be established, so the full pack was loaded. Treat it as a gap.
+
+Never infer that a missing verdict means a library is safe to answer from memory.
+
 ## Miss Rule
 
 When a context pack starts with `RESULT: no matching documentation`, the local cache cannot answer the question. Rewording the query cannot change that.

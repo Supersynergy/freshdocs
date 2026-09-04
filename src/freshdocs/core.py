@@ -18,6 +18,7 @@ from typing import Any
 
 from . import __version__
 from .analyzer import analyze_project, detected_versions
+from .gap import GapVerdict, classify, release_dates, resolve_cutoff, summarise
 
 APP_DIR = pathlib.Path(os.environ.get("FRESHDOCS_HOME", pathlib.Path.home() / ".freshdocs"))
 REGISTRY_PATH = pathlib.Path(os.environ.get("FRESHDOCS_REGISTRY", APP_DIR / "registry.json"))
@@ -140,6 +141,11 @@ def ensure_registry() -> dict[str, Any]:
     for name, entry in current.get("libs", {}).items():
         base = libs.get(name)
         libs[name] = {**base, **entry} if isinstance(base, dict) and isinstance(entry, dict) else entry
+    # Anything else the user stored here, such as model cutoff overrides, is theirs to
+    # keep. Rebuilding the file from the shipped defaults must never silently drop it.
+    for key, value in current.items():
+        if key not in {"libs", "_migrations"}:
+            merged.setdefault(key, value)
     if migrations:
         merged["_migrations"] = migrations
     if merged != current:
@@ -868,6 +874,8 @@ def context_pack(
     limit: int = 6,
     sync_stale: bool = False,
     analysis: dict[str, Any] | None = None,
+    model: str | None = None,
+    cutoff: str | None = None,
 ) -> str:
     reg = ensure_registry()["libs"]
     analysis = analysis or analyze_project(root, reg)
@@ -907,8 +915,25 @@ def context_pack(
     versions = detected_versions(analysis)
     selected_versions = {lib: versions[lib] for lib in selected if lib in versions}
     state = load_json(STATE_PATH, {})
+
+    # Classify before fetching. Knowing which libraries the model cannot cover turns
+    # --sync-stale from "refresh everything" into "refresh the gaps", which is where
+    # both the network cost and the risk actually sit.
+    gap_notes: list[str] = []
+    verdicts: list[GapVerdict] = []
+    needs_docs: set[str] | None = None
+    model_name = active_model(model)
+    if model_name:
+        verdicts = gap_verdicts(selected_versions, model_name, cutoff)
+        needs_docs = {v.lib for v in verdicts if v.needs_full_context}
+        gap_notes.append(f"model: {model_name} ({summarise(verdicts)})")
+        gap_notes.extend(f"  {v.lib} {v.version}: {v.label()}" for v in verdicts)
+
     if sync_stale:
         for lib in selected:
+            # A library with no verdict was never classified, so it is never skipped.
+            if needs_docs is not None and lib in selected_versions and lib not in needs_docs:
+                continue
             target = selected_versions.get(lib)
             if target:
                 if is_stale(state, lib, target, reg[lib]) or not has_indexed_docs(lib, target):
@@ -916,6 +941,10 @@ def context_pack(
             else:
                 sync_library(lib)
         state = load_json(STATE_PATH, {})
+        if needs_docs is not None:
+            skipped = len(selected_versions) - len(needs_docs & set(selected_versions))
+            if skipped:
+                gap_notes.append(f"  sync: {skipped} covered librar{'y' if skipped == 1 else 'ies'} not refetched")
 
     effective_versions = dict(selected_versions)
     # Libraries the project does not declare have no lockfile version to pin to,
@@ -924,7 +953,14 @@ def context_pack(
     for lib in cache_fallback:
         if current := state.get(lib, {}).get("version"):
             effective_versions.setdefault(lib, current)
-    hits = search(query, limit=limit, versions=effective_versions) if effective_versions else []
+
+    # A version the model was trained on needs a confirmation, not a tutorial.
+    effective_limit = limit
+    if verdicts and not any(v.needs_full_context for v in verdicts):
+        effective_limit = max(1, limit // 3)
+        gap_notes.append("  budget: reduced, every library predates this model's training cutoff")
+
+    hits = search(query, limit=effective_limit, versions=effective_versions) if effective_versions else []
     language_names = [item["language"] for item in analysis["languages"][:6]]
     rendered_libs = []
     for lib in selected:
@@ -947,6 +983,7 @@ def context_pack(
         f"project: {root}",
         f"languages: {', '.join(language_names) if language_names else 'none detected'}",
         f"libraries: {', '.join(rendered_libs) if rendered_libs else 'none detected'}",
+        *gap_notes,
         "",
     ]
     for i, hit in enumerate(hits, 1):
@@ -1042,12 +1079,90 @@ def add_library(
     write_json(REGISTRY_PATH, reg)
 
 
+RELEASE_CACHE_KEY = "_releases"
+RELEASE_CACHE_DAYS = 1
+
+
+def cached_release_dates(name: str, meta: dict[str, Any], refresh: bool = False) -> dict[str, str]:
+    """Publication dates per version, cached so gap checks cost no network per prompt.
+
+    Gap detection runs on every context pack, so hitting a package registry each time
+    would make the cheap path the slow one. A day-old answer is precise enough to
+    compare against a training cutoff measured in months.
+    """
+    state = load_json(STATE_PATH, {})
+    cache = state.get(RELEASE_CACHE_KEY)
+    cache = cache if isinstance(cache, dict) else {}
+    entry = cache.get(name)
+    if not refresh and isinstance(entry, dict):
+        fetched = entry.get("fetched")
+        dates = entry.get("dates")
+        if isinstance(dates, dict) and fetched:
+            try:
+                age = (dt.date.today() - dt.date.fromisoformat(str(fetched))).days
+            except ValueError:
+                age = RELEASE_CACHE_DAYS + 1
+            if age < RELEASE_CACHE_DAYS:
+                return {str(k): str(v) for k, v in dates.items()}
+
+    dates = release_dates(meta, fetch_url)
+    if not dates and isinstance(entry, dict) and isinstance(entry.get("dates"), dict):
+        # A failed refresh must not discard a good answer we already had.
+        return {str(k): str(v) for k, v in entry["dates"].items()}
+    cache[name] = {"fetched": today(), "dates": dates}
+    state[RELEASE_CACHE_KEY] = cache
+    write_json(STATE_PATH, state)
+    return dates
+
+
+def active_model(model: str | None = None) -> str | None:
+    return model or os.environ.get("FRESHDOCS_MODEL") or None
+
+
+def model_cutoff(model: str | None, cutoff: str | None = None) -> tuple[str | None, str | None, str | None]:
+    """Return (model, matched key, cutoff date), honouring explicit and registry overrides."""
+    resolved = active_model(model)
+    if cutoff:
+        return resolved, "explicit", cutoff
+    overrides = ensure_registry().get("models")
+    overrides = {str(k): str(v) for k, v in overrides.items()} if isinstance(overrides, dict) else {}
+    key, value = resolve_cutoff(resolved, overrides)
+    return resolved, key, value
+
+
+def set_model_cutoff(model: str, cutoff: str) -> None:
+    reg = ensure_registry()
+    models = reg.get("models")
+    reg["models"] = {**models} if isinstance(models, dict) else {}
+    reg["models"][model] = cutoff
+    write_json(REGISTRY_PATH, reg)
+
+
+def gap_verdicts(
+    libs: dict[str, str],
+    model: str | None = None,
+    cutoff: str | None = None,
+) -> list[GapVerdict]:
+    """Classify each (library, version) against the model's training cutoff."""
+    reg = ensure_registry()["libs"]
+    _, _, resolved_cutoff = model_cutoff(model, cutoff)
+    verdicts: list[GapVerdict] = []
+    for lib, version in sorted(libs.items()):
+        meta = reg.get(lib)
+        if not isinstance(meta, dict):
+            verdicts.append(GapVerdict(lib, version, "unknown", "library is not registered"))
+            continue
+        dates = cached_release_dates(lib, meta) if resolved_cutoff else {}
+        verdicts.append(classify(lib, version, dates, resolved_cutoff))
+    return verdicts
+
+
 def outdated_index_versions() -> list[tuple[str, str]]:
     """Cached versions whose chunks were produced by an older indexing pipeline."""
     state = load_json(STATE_PATH, {})
     outdated: list[tuple[str, str]] = []
     for lib, item in sorted(state.items()):
-        if not isinstance(item, dict):
+        if lib.startswith("_") or not isinstance(item, dict):
             continue
         versions = item.get("versions")
         entries = versions.items() if isinstance(versions, dict) else [(item.get("version"), item)]
@@ -1108,7 +1223,28 @@ def doctor() -> tuple[int, list[str]]:
         messages.append("  refresh them with: freshdocs sync --outdated")
     else:
         messages.append(f"index format: all cached versions at format {INDEX_FORMAT}")
+    messages.extend(_gap_health())
     return 0, messages
+
+
+def _gap_health() -> list[str]:
+    """Report whether gap-aware retrieval is active, and prove it fails safe."""
+    model, matched, cutoff = model_cutoff(None)
+    if not model:
+        return ["gap mode: off (set FRESHDOCS_MODEL or pass --model to load only training gaps)"]
+    if not cutoff:
+        return [
+            f"gap mode: on for {model}, but no cutoff is known",
+            "  every library will be loaded in full; record one with: freshdocs models --set <model> <YYYY-MM-DD>",
+        ]
+    # A missing publication date must never be read as "old enough to skip".
+    probe = classify("__probe__", "1.0.0", {}, cutoff)
+    if not probe.needs_full_context:
+        return [f"gap mode: BROKEN for {model}: missing release data did not fail safe"]
+    return [
+        f"gap mode: on for {model} (matched {matched}, cutoff {cutoff})",
+        "  unknown release dates fail safe to a full context pack",
+    ]
 
 
 def export_synapse() -> int:

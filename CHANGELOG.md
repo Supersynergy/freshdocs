@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 - 2026-09-04
+
+- Added model-aware gap detection: `--model` compares each installed version's publication date against the model's training cutoff and loads documentation only for what that model cannot already know.
+- Added the `behind` verdict for a project pinned to an older release than the model most likely learned, which is where an agent invents an API that exists upstream but not in this checkout.
+- Added `freshdocs gap` to report the per-library verdict, and `freshdocs models` to list or override training cutoffs.
+- Changed `--sync-stale` to refetch only the libraries a model cannot cover instead of every detected library.
+- Added the `model` and `cutoff` arguments to the `freshdocs_context` MCP tool.
+- Added a `doctor` self-check that re-proves missing release data still fails safe to a full context pack.
+- Added release-date caching so gap detection costs no network call per prompt, and keeps the previous answer when a refresh fails.
+- Fixed the registry dropping user-owned top-level keys, such as model cutoff overrides, when it was rebuilt from the shipped defaults.
+
 ## 0.3.1 - 2026-09-04
 
 - Changed separate documentation repositories to be read at a resolved commit instead of a moving branch, so their source URLs stay immutable and are labelled `docs-commit <sha>` rather than `live-unversioned`.

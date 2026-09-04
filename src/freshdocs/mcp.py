@@ -35,6 +35,14 @@ TOOLS = [
                 "libs": {"type": "array", "items": {"type": "string"}},
                 "limit": {"type": "integer", "default": 6},
                 "sync_stale": {"type": "boolean", "default": False},
+                "model": {
+                    "type": "string",
+                    "description": "your own model id; loads only what your training cannot cover",
+                },
+                "cutoff": {
+                    "type": "string",
+                    "description": "override your training cutoff, YYYY-MM-DD",
+                },
             },
             "required": ["query"],
         },
@@ -104,6 +112,8 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
             args.get("libs"),
             int(args.get("limit", 6)),
             bool(args.get("sync_stale", False)),
+            model=args.get("model"),
+            cutoff=args.get("cutoff"),
         )
         return tool_text(text)
     if name == "freshdocs_search":

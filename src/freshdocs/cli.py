@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import sys
 
 from . import __version__
@@ -15,15 +16,19 @@ from .core import (
     ensure_registry,
     STATE_PATH,
     export_synapse,
+    gap_verdicts,
     load_json,
+    model_cutoff,
     outdated_index_versions,
     project_analysis,
     prune_outdated_index,
+    set_model_cutoff,
     search,
     status_rows,
     sync_library,
 )
 from .analyzer import detected_versions
+from .gap import DEFAULT_MODEL_CUTOFFS, summarise
 from .routing import routed_context
 from .sources import build_source_plan, render_source_plan
 
@@ -70,6 +75,8 @@ def build_parser() -> argparse.ArgumentParser:
     ctx.add_argument("--lib", action="append", help="library name; repeatable")
     ctx.add_argument("--limit", type=int, default=6)
     ctx.add_argument("--sync-stale", action="store_true")
+    ctx.add_argument("--model", help="target model id; loads only what its training cannot cover")
+    ctx.add_argument("--cutoff", help="override the model's training cutoff, YYYY-MM-DD")
 
     srch = sub.add_parser("search", help="search cached docs")
     srch.add_argument("query")
@@ -91,6 +98,15 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="check local cache and FTS index")
     sub.add_parser("mcp", help="run MCP stdio server")
 
+    gap = sub.add_parser("gap", help="show which libraries a model's training cannot cover")
+    gap.add_argument("--project", default=".")
+    gap.add_argument("--model", help="target model id; defaults to $FRESHDOCS_MODEL")
+    gap.add_argument("--cutoff", help="override the model's training cutoff, YYYY-MM-DD")
+    gap.add_argument("--json", action="store_true")
+
+    models = sub.add_parser("models", help="list or override model training cutoffs")
+    models.add_argument("--set", nargs=2, metavar=("MODEL", "CUTOFF"), help="record a cutoff for a model id")
+
     prune = sub.add_parser("prune", help="drop cached versions built by an older indexer")
     prune.add_argument(
         "--include-current",
@@ -111,6 +127,51 @@ def cmd_init() -> int:
     code, messages = doctor()
     print("\n".join(messages))
     return code
+
+
+def cmd_gap(args: argparse.Namespace) -> int:
+    root = pathlib.Path(args.project).expanduser().resolve()
+    versions = detected_versions(project_analysis(root))
+    model, matched, cutoff = model_cutoff(args.model, args.cutoff)
+    if not model:
+        print("no model given: pass --model or set FRESHDOCS_MODEL", file=sys.stderr)
+        return 2
+    verdicts = gap_verdicts(versions, model, args.cutoff)
+    if args.json:
+        print(json.dumps({
+            "model": model,
+            "matched": matched,
+            "cutoff": cutoff,
+            "verdicts": [verdict.as_dict() for verdict in verdicts],
+        }, indent=1))
+        return 0
+    origin = f"matched {matched}" if matched else "no cutoff known"
+    print(f"model: {model} ({origin}, cutoff {cutoff or 'unknown'})")
+    if not verdicts:
+        print("no project libraries with exact versions were detected")
+        return 0
+    for verdict in verdicts:
+        flag = "LOAD" if verdict.needs_full_context else "skip"
+        print(f"  {flag}  {verdict.lib:18} {verdict.version:14} {verdict.label()}")
+    print(summarise(verdicts))
+    return 0
+
+
+def cmd_models(args: argparse.Namespace) -> int:
+    if args.set:
+        model, cutoff = args.set
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", cutoff):
+            print("cutoff must be YYYY-MM-DD", file=sys.stderr)
+            return 2
+        set_model_cutoff(model, cutoff)
+        print(f"{model}: cutoff {cutoff}")
+        return 0
+    overrides = ensure_registry().get("models")
+    overrides = overrides if isinstance(overrides, dict) else {}
+    for model, cutoff in sorted({**DEFAULT_MODEL_CUTOFFS, **overrides}.items()):
+        origin = "override" if model in overrides else "default (approximate)"
+        print(f"  {model:22} {cutoff}  {origin}")
+    return 0
 
 
 def cmd_prune(args: argparse.Namespace) -> int:
@@ -214,7 +275,18 @@ def cmd_add(args: argparse.Namespace) -> int:
 
 def cmd_context(args: argparse.Namespace) -> int:
     root = pathlib.Path(args.project).expanduser().resolve()
-    print(context_pack(args.query, root, args.lib, args.limit, args.sync_stale), end="")
+    print(
+        context_pack(
+            args.query,
+            root,
+            args.lib,
+            args.limit,
+            args.sync_stale,
+            model=args.model,
+            cutoff=args.cutoff,
+        ),
+        end="",
+    )
     return 0
 
 
@@ -327,6 +399,10 @@ def main(argv: list[str] | None = None) -> int:
         return code
     if args.cmd == "prune":
         return cmd_prune(args)
+    if args.cmd == "gap":
+        return cmd_gap(args)
+    if args.cmd == "models":
+        return cmd_models(args)
     if args.cmd == "mcp":
         from .mcp import run_stdio
 

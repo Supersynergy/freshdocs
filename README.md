@@ -76,6 +76,50 @@ So a project pinned to `ruff 0.14.14` gets `0.14.14` docs even while the cache a
 `0.16.6`. That difference is the point: an agent writing against your lockfile needs the
 API you have, not the API upstream shipped last week.
 
+### Load Only What The Model Cannot Know
+
+A model that was trained on `hono 4.13.5` does not need its documentation pasted back.
+The expensive case is the opposite one, and there are two of them.
+
+Tell Freshdocs which model is reading, and it compares each installed version's
+publication date against that model's training cutoff:
+
+```sh
+freshdocs gap --project . --model claude-sonnet-4-5
+```
+
+```text
+model: claude-sonnet-4-5 (matched claude-sonnet-4, cutoff 2025-01-01)
+  LOAD  hono               4.13.5   training gap (released 2026-08-26, after cutoff 2025-01-01)
+  skip  zod                3.22.4   covered by training (released 2023-08-01, cutoff 2025-01-01)
+```
+
+| Verdict | Meaning | Action |
+|---|---|---|
+| `ahead` | Released after the cutoff. The model cannot know it. | full context |
+| `behind` | The project pins an older release than the model most likely learned, so it may write an API that exists upstream but not here. | full context |
+| `covered` | The model's knowledge and the project agree. | short confirmation |
+| `unknown` | Any input is missing. | full context, with the reason |
+
+Pass `--model` to `context` and the pack carries the same reasoning, spends its budget
+on the gaps, and `--sync-stale` refetches only those libraries instead of all of them:
+
+```sh
+freshdocs context "bearer auth" --project . --model claude-sonnet-4-5 --sync-stale
+export FRESHDOCS_MODEL=claude-sonnet-4-5   # or set it once
+```
+
+Built-in cutoffs are approximate and matched by longest prefix. Correct one at any time:
+
+```sh
+freshdocs models                              # list what is known
+freshdocs models --set my-local-model 2025-06-01
+```
+
+**Every unknown fails safe.** An unrecognised model, an unpublished version, or an
+offline registry all resolve to `unknown`, which loads the full pack and says why.
+Nothing is ever skipped on a guess. `freshdocs doctor` re-proves that on every run.
+
 ### Keeping The Cache Honest
 
 `freshdocs doctor` reports cached versions that an older indexer produced. Drop them:
