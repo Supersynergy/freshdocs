@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 - 2026-09-04
+
+- Changed separate documentation repositories to be read at a resolved commit instead of a moving branch, so their source URLs stay immutable and are labelled `docs-commit <sha>` rather than `live-unversioned`.
+- Added `freshdocs prune` to drop cached versions built by an older indexer; each is re-fetched with the current pipeline the moment a project pins to it, which is instant where re-indexing every historical version took hours.
+- Added `freshdocs sync --outdated` to eagerly re-index those versions instead, for callers who want them warm.
+- Added a warning when a documentation branch cannot be resolved to a commit.
+
 ## 0.3.0 - 2026-09-03
 
 - Added documentation-tree fetching so prose from `docs/` is indexed instead of the README alone.

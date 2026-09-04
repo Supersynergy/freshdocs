@@ -314,15 +314,19 @@ def fetch_library(name: str, meta: dict[str, Any], version: str | None = None) -
 
     used = sum(len(source.text) for source in sources)
     docs_pages, tree_listed = _fetch_docs_tree(repo, prefixes, selected_ref, max(0, MAX_DOC_CHARS - used))
-    # Many projects keep prose docs in a separate website repository, which has no
-    # version tag of its own; it is fetched at its default branch and labelled live.
+    # Many projects keep prose docs in a separate website repository, which carries no
+    # version tag of its own. Resolving its branch to a commit keeps the source URL
+    # immutable, so the cited page still reads as indexed after the branch moves.
     if docs_repo := meta.get("docs_gh"):
         docs_branch = str(meta.get("docs_branch", "main"))
+        docs_ref = resolve_commit(str(docs_repo), docs_branch) or docs_branch
+        if docs_ref == docs_branch:
+            fetch_warnings.append(f"docs repo {docs_repo}: could not resolve {docs_branch} to a commit")
         used = sum(len(source.text) for source in sources) + sum(len(page.text) for page in docs_pages)
         extra, extra_listed = _fetch_docs_tree(
-            str(docs_repo), [""], docs_branch, max(0, MAX_DOC_CHARS - used)
+            str(docs_repo), [""], docs_ref, max(0, MAX_DOC_CHARS - used)
         )
-        docs_pages.extend(DocSource(page.name, page.url, "live", page.text) for page in extra)
+        docs_pages.extend(extra)
         tree_listed = tree_listed or extra_listed
     if docs_pages:
         sources.extend(docs_pages)
@@ -429,13 +433,32 @@ def _fetch_llms_pages(index_text: str, index_url: str, budget: int) -> list[DocS
     return pages
 
 
-def _github_tree(repo: str, ref: str) -> list[str]:
-    url = f"https://api.github.com/repos/{repo}/git/trees/{urllib.parse.quote(ref, safe='')}?recursive=1"
+def _github_headers(accept: str = "application/vnd.github+json") -> dict[str, str]:
     # The GitHub API rejects requests without a User-Agent with HTTP 403.
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT}
+    headers = {"Accept": accept, "User-Agent": USER_AGENT}
     if token := gh_token():
         headers["Authorization"] = f"Bearer {token}"
-    payload = json.loads(https_get(url, headers, timeout=12))
+    return headers
+
+
+def resolve_commit(repo: str, ref: str) -> str | None:
+    """Resolve a branch to the commit it currently points at.
+
+    A documentation website repository carries no version tags, so it can only be read
+    from a branch. Recording the commit instead of the branch name keeps the source URL
+    immutable: it still returns exactly what was indexed after the branch moves on.
+    """
+    url = f"https://api.github.com/repos/{repo}/commits/{urllib.parse.quote(ref, safe='')}"
+    try:
+        sha = https_get(url, _github_headers("application/vnd.github.sha"), timeout=12).strip()
+    except Exception:
+        return None
+    return sha if re.fullmatch(r"[0-9a-f]{40}", sha) else None
+
+
+def _github_tree(repo: str, ref: str) -> list[str]:
+    url = f"https://api.github.com/repos/{repo}/git/trees/{urllib.parse.quote(ref, safe='')}?recursive=1"
+    payload = json.loads(https_get(url, _github_headers(), timeout=12))
     return [
         str(node["path"])
         for node in payload.get("tree", [])
@@ -823,6 +846,21 @@ def project_analysis(root: pathlib.Path) -> dict[str, Any]:
     return analyze_project(root, ensure_registry()["libs"])
 
 
+def pin_label(source_ref: str | None, exact_ref: bool) -> str:
+    """Describe how firmly a snippet is tied to a point in the source history.
+
+    ``docs-commit`` is a separate documentation repository read at a resolved commit:
+    not the library's version tag, but still an immutable URL rather than a branch that
+    keeps moving.
+    """
+    ref = str(source_ref or "")
+    if ref == "live":
+        return "live-unversioned"
+    if re.fullmatch(r"[0-9a-f]{40}", ref):
+        return f"docs-commit {ref[:7]}"
+    return "exact-ref" if exact_ref else "branch-fallback"
+
+
 def context_pack(
     query: str,
     root: pathlib.Path,
@@ -847,8 +885,23 @@ def context_pack(
             for item in analysis["libraries"]
             if mentioned(str(item["lib"])) or mentioned(str(item["package"]))
         ]
-        selected = named or detected
+        # A question may name a registered library the project does not declare.
+        # Falling straight back to the project's own libraries answers it from an
+        # unrelated library -- confidently, and with a real version pin attached.
+        # That is the most expensive failure this tool can produce, because the
+        # output is indistinguishable from a correct answer. Prefer the library
+        # the question actually named, and label it as external below.
+        foreign = []
+        if not named:
+            foreign = [
+                lib
+                for lib, entry in reg.items()
+                if lib not in detected
+                and (mentioned(lib) or mentioned(str(entry.get("pkg") or "")))
+            ]
+        selected = named or foreign or detected
     else:
+        foreign = []
         selected = list(libs or [])
     selected = list(dict.fromkeys(selected))
     versions = detected_versions(analysis)
@@ -865,16 +918,24 @@ def context_pack(
         state = load_json(STATE_PATH, {})
 
     effective_versions = dict(selected_versions)
-    if not auto_selected:
-        for lib in selected:
-            if current := state.get(lib, {}).get("version"):
-                effective_versions.setdefault(lib, current)
+    # Libraries the project does not declare have no lockfile version to pin to,
+    # so the cached registry version is the only one available for them.
+    cache_fallback = selected if not auto_selected else foreign
+    for lib in cache_fallback:
+        if current := state.get(lib, {}).get("version"):
+            effective_versions.setdefault(lib, current)
     hits = search(query, limit=limit, versions=effective_versions) if effective_versions else []
     language_names = [item["language"] for item in analysis["languages"][:6]]
     rendered_libs = []
     for lib in selected:
         if lib in selected_versions:
             rendered_libs.append(f"{lib} {selected_versions[lib]}")
+        elif lib in foreign and state.get(lib, {}).get("version"):
+            # Say plainly that this version came from the cache, not from the
+            # project, so the reader knows it may differ from what is installed.
+            rendered_libs.append(
+                f"{lib} {state[lib]['version']} (named in query; not a project dependency)"
+            )
         elif not auto_selected and state.get(lib, {}).get("version"):
             rendered_libs.append(f"{lib} {state[lib]['version']} (explicit/cache version)")
         else:
@@ -897,10 +958,7 @@ def context_pack(
             (source for source in version_state.get("sources", []) if source.get("url") == hit["source"]),
             {},
         )
-        if source_state.get("ref") == "live":
-            pin = "live-unversioned"
-        else:
-            pin = "exact-ref" if version_state.get("exact_ref") else "branch-fallback"
+        pin = pin_label(source_state.get("ref"), bool(version_state.get("exact_ref")))
         lines.extend(
             [
                 f"[{i}] {hit['lib']} {hit['version']} fetched {hit['checked']} {pin} - {hit['title']}",
@@ -1001,6 +1059,35 @@ def outdated_index_versions() -> list[tuple[str, str]]:
     return outdated
 
 
+def prune_outdated_index(keep_current: bool = True) -> list[tuple[str, str]]:
+    """Drop cached versions produced by an older indexing pipeline.
+
+    Re-fetching every historical version eagerly costs hours and stores documentation
+    nobody asked for. Dropping them is instant, and the staleness check re-fetches a
+    version with the current pipeline the moment a project actually pins to it.
+
+    The version each library currently tracks is kept by default so routine lookups
+    stay served from cache.
+    """
+    state = load_json(STATE_PATH, {})
+    removed: list[tuple[str, str]] = []
+    for lib, version in outdated_index_versions():
+        item = state.get(lib)
+        if not isinstance(item, dict):
+            continue
+        if keep_current and item.get("version") == version:
+            continue
+        clear_indexed_docs(lib, version)
+        versions = item.get("versions")
+        if isinstance(versions, dict):
+            versions.pop(version, None)
+        removed.append((lib, version))
+    if removed:
+        write_json(STATE_PATH, state)
+    return removed
+
+
+
 def doctor() -> tuple[int, list[str]]:
     messages = []
     ensure_registry()
@@ -1018,7 +1105,7 @@ def doctor() -> tuple[int, list[str]]:
         shown = ", ".join(f"{lib} {version}" for lib, version in outdated[:6])
         more = f" (+{len(outdated) - 6} more)" if len(outdated) > 6 else ""
         messages.append(f"index format: {len(outdated)} cached version(s) built by an older indexer: {shown}{more}")
-        messages.append("  refresh them with: freshdocs sync --all --force")
+        messages.append("  refresh them with: freshdocs sync --outdated")
     else:
         messages.append(f"index format: all cached versions at format {INDEX_FORMAT}")
     return 0, messages

@@ -271,6 +271,86 @@ class FreshdocsCoreTests(unittest.TestCase):
         _, messages = self.core.doctor()
         self.assertTrue(any("older indexer" in line for line in messages))
 
+    def test_prune_drops_old_format_versions_but_keeps_the_current_one(self):
+        self.core.index_docs("demo", "1.0.0", "## Old\nlegacy chunk about routing.\n", "2026-07-27")
+        self.core.index_docs("demo", "2.0.0", "## New\ncurrent chunk about routing.\n", "2026-09-04")
+        self.core.write_json(
+            self.core.STATE_PATH,
+            {
+                "demo": {
+                    "version": "2.0.0",
+                    "versions": {
+                        "1.0.0": {"content_fetched": "2026-07-27", "index_format": 1},
+                        "2.0.0": {"content_fetched": "2026-09-04", "index_format": 1},
+                    },
+                }
+            },
+        )
+        removed = self.core.prune_outdated_index()
+        self.assertEqual(removed, [("demo", "1.0.0")])
+        self.assertFalse(self.core.has_indexed_docs("demo", "1.0.0"))
+        self.assertTrue(self.core.has_indexed_docs("demo", "2.0.0"))
+        state = self.core.load_json(self.core.STATE_PATH, {})
+        self.assertNotIn("1.0.0", state["demo"]["versions"])
+
+    def test_pruned_version_is_refetched_when_a_project_pins_to_it(self):
+        meta = {"gh": "example/demo", "eco": "npm"}
+        self.core.write_json(self.core.STATE_PATH, {"demo": {"version": "2.0.0", "versions": {}}})
+        state = self.core.load_json(self.core.STATE_PATH, {})
+        self.assertTrue(self.core.is_stale(state, "demo", "1.0.0", meta))
+
+    def test_prune_dry_run_changes_nothing(self):
+        import freshdocs.cli as cli
+
+        self.core.index_docs("demo", "1.0.0", "## Old\nlegacy chunk.\n", "2026-07-27")
+        self.core.write_json(
+            self.core.STATE_PATH,
+            {"demo": {"version": "2.0.0", "versions": {"1.0.0": {"content_fetched": "2026-07-27", "index_format": 1}}}},
+        )
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = cli.main(["prune", "--dry-run"])
+        self.assertEqual(code, 0)
+        self.assertIn("would drop demo 1.0.0", out.getvalue())
+        self.assertTrue(self.core.has_indexed_docs("demo", "1.0.0"))
+
+    def test_sync_outdated_targets_pinned_older_versions(self):
+        import freshdocs.cli as cli
+
+        self.core.write_json(
+            self.core.STATE_PATH,
+            {
+                "ruff": {
+                    "version": "0.16.6",
+                    "versions": {
+                        "0.14.14": {"content_fetched": self.core.today(), "index_format": 1},
+                        "0.16.6": {"content_fetched": self.core.today(), "index_format": self.core.INDEX_FORMAT},
+                    },
+                }
+            },
+        )
+        calls = []
+
+        def fake_sync(lib, force=False, version=None):
+            calls.append((lib, version, force))
+            return {"lib": lib, "version": version or "?", "checked": "2026-09-04", "inserted": 1, "status": "indexed"}
+
+        with mock.patch.object(cli, "sync_library", side_effect=fake_sync):
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = cli.main(["sync", "--outdated"])
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, [("ruff", "0.14.14", True)])
+
+    def test_sync_outdated_reports_a_clean_cache(self):
+        import freshdocs.cli as cli
+
+        self.core.write_json(self.core.STATE_PATH, {})
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = cli.main(["sync", "--outdated"])
+        self.assertEqual(code, 0)
+        self.assertIn("nothing outdated", out.getvalue())
+
     def test_version_candidates_cover_name_prefixed_release_tags(self):
         candidates = self.core.version_ref_candidates("bun", {"pkg": "bun"}, "1.4.0")
         self.assertIn("v1.4.0", candidates)
@@ -369,37 +449,138 @@ class FreshdocsCoreTests(unittest.TestCase):
         ):
             self.assertNotIn(excluded, ranked)
 
-    def test_separate_docs_repository_is_fetched_and_marked_live(self):
+    def test_pin_label_distinguishes_commit_from_branch_and_live(self):
+        sha = "c48b858a67fb960f8cabe2ee9ac5e2cd0b8d66d9"
+        self.assertEqual(self.core.pin_label(sha, False), "docs-commit c48b858")
+        self.assertEqual(self.core.pin_label("live", True), "live-unversioned")
+        self.assertEqual(self.core.pin_label("v1.2.3", True), "exact-ref")
+        self.assertEqual(self.core.pin_label("main", False), "branch-fallback")
+
+    def test_docs_repository_branch_is_recorded_as_a_commit(self):
         readme = self.core.DocSource(
             "README.md",
             "https://raw.githubusercontent.com/example/demo/v1.2.3/README.md",
             "v1.2.3",
             "# Demo\n" + "current API " * 30,
         )
-        page = self.core.DocSource(
-            "docs/guide.md", "https://raw.githubusercontent.com/example/site/main/docs/guide.md", "main", "prose" * 100
-        )
+        sha = "a" * 40
+        seen: dict[str, str] = {}
 
         def fake_tree(repo, prefixes, ref, budget):
-            return ([page], True) if repo == "example/site" else ([], True)
+            seen[repo] = ref
+            if repo != "example/site":
+                return [], True
+            page = self.core.DocSource(
+                "docs/guide.md",
+                f"https://raw.githubusercontent.com/example/site/{ref}/docs/guide.md",
+                ref,
+                "prose" * 100,
+            )
+            return [page], True
 
         with mock.patch.object(self.core, "_fetch_repo_sources", return_value=[readme]):
-            with mock.patch.object(self.core, "_fetch_docs_tree", side_effect=fake_tree):
-                result = self.core.fetch_library(
-                    "demo",
-                    {"gh": "example/demo", "docs_gh": "example/site", "docs_branch": "main"},
-                    "1.2.3",
-                )
-        guide = [source for source in result.sources if source.name == "docs/guide.md"]
-        self.assertEqual(len(guide), 1)
-        self.assertEqual(guide[0].ref, "live")
+            with mock.patch.object(self.core, "resolve_commit", return_value=sha):
+                with mock.patch.object(self.core, "_fetch_docs_tree", side_effect=fake_tree):
+                    result = self.core.fetch_library(
+                        "demo",
+                        {"gh": "example/demo", "docs_gh": "example/site", "docs_branch": "main"},
+                        "1.2.3",
+                    )
+        self.assertEqual(seen["example/site"], sha)
+        guide = next(source for source in result.sources if source.name == "docs/guide.md")
+        self.assertEqual(guide.ref, sha)
+        self.assertIn(sha, guide.url)
+        self.assertEqual(self.core.pin_label(guide.ref, result.exact_ref), f"docs-commit {sha[:7]}")
+        self.assertEqual(result.warnings, ())
         self.assertTrue(result.exact_ref)
+
+    def test_unresolvable_docs_branch_is_reported(self):
+        readme = self.core.DocSource(
+            "README.md",
+            "https://raw.githubusercontent.com/example/demo/v1.2.3/README.md",
+            "v1.2.3",
+            "# Demo\n" + "current API " * 30,
+        )
+        with mock.patch.object(self.core, "_fetch_repo_sources", return_value=[readme]):
+            with mock.patch.object(self.core, "resolve_commit", return_value=None):
+                with mock.patch.object(self.core, "_fetch_docs_tree", return_value=([], True)):
+                    result = self.core.fetch_library(
+                        "demo",
+                        {"gh": "example/demo", "docs_gh": "example/site", "docs_branch": "main"},
+                        "1.2.3",
+                    )
+        self.assertTrue(any("could not resolve main" in warning for warning in result.warnings))
 
     def test_docs_tree_network_failure_is_not_reported_as_missing_docs(self):
         with mock.patch.object(self.core, "_github_tree", side_effect=RuntimeError("offline")):
             sources, listed = self.core._fetch_docs_tree("example/demo", [""], "v1.0.0", 10_000)
         self.assertEqual(sources, [])
         self.assertFalse(listed)
+
+    def _sync_library(self, lib: str, version: str, markdown: str) -> None:
+        """Index docs *and* record state, the way a real sync does.
+
+        index_docs alone fills the search index but leaves no state entry, so a
+        library indexed that way has no resolvable version -- which is not what
+        a synced library looks like in production.
+        """
+        self.core.index_docs(lib, version, markdown, "2026-07-09")
+        state = self.core.load_json(self.core.STATE_PATH, {})
+        state[lib] = {"version": version, "checked": "2026-07-09", "exact_ref": True}
+        self.core.write_json(self.core.STATE_PATH, state)
+
+    def _project_with_react(self) -> pathlib.Path:
+        root = pathlib.Path(self.tmp.name) / "repo"
+        root.mkdir(exist_ok=True)
+        (root / "package.json").write_text(json.dumps({"dependencies": {"react": "^18"}}))
+        (root / "package-lock.json").write_text(
+            json.dumps({"packages": {"node_modules/react": {"version": "18.3.1"}}})
+        )
+        return root
+
+    def test_query_naming_a_foreign_library_is_not_answered_from_a_project_library(self):
+        """The worst failure mode: a confident answer from the wrong library.
+
+        The project declares react. The question names vite, which is registered
+        but not a dependency here. Answering it from react docs would look
+        exactly like a correct answer, so it must not happen.
+        """
+        root = self._project_with_react()
+        self._sync_library("react", "18.3.1", "# Config\nReact config guidance.")
+        self._sync_library("vite", "8.2.2", "# Config\nVite config guidance.")
+
+        context = self.core.context_pack("how do I change the vite config", root)
+
+        self.assertIn("Vite config guidance", context)
+        self.assertNotIn("React config guidance", context)
+        # The version is the cache's, not a lockfile's, and must say so.
+        self.assertIn("not a project dependency", context)
+
+    def test_foreign_fallback_does_not_hijack_a_normal_project_query(self):
+        """The guard must not fire when the project's own library is the answer."""
+        root = self._project_with_react()
+        self._sync_library("react", "18.3.1", "# Hooks\nReact hook rules.")
+        self._sync_library("vite", "8.2.2", "# Hooks\nVite hook rules.")
+
+        context = self.core.context_pack("what are the hook rules", root)
+
+        self.assertIn("React hook rules", context)
+        self.assertNotIn("Vite hook rules", context)
+        self.assertIn("react 18.3.1", context)
+        self.assertNotIn("not a project dependency", context)
+
+    def test_project_library_named_in_query_keeps_its_lockfile_version(self):
+        """A named project library still resolves to the installed version."""
+        root = self._project_with_react()
+        self.core.index_docs("react", "18.3.1", "# API\nReact 18 API.", "2026-07-09")
+        self.core.index_docs("react", "19.2.7", "# API\nReact 19 API.", "2026-07-09")
+
+        context = self.core.context_pack("how does the react API work", root)
+
+        self.assertIn("react 18.3.1", context)
+        self.assertIn("React 18 API", context)
+        self.assertNotIn("React 19 API", context)
+        self.assertNotIn("not a project dependency", context)
 
     def test_miss_states_cause_and_forbids_retrying_variants(self):
         pack = self.core.context_pack(

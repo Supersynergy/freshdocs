@@ -44,6 +44,7 @@ An agent may claim a docs-grounded implementation only when:
 - the relevant docs pack was generated for the task
 - snippets include project version, content-fetch date, source URL, and ref status
 - `branch-fallback` is not presented as an exact version tag
+- `docs-commit <sha>` is presented as current documentation prose, not as the library's own version tag
 - generated code passes the repo's real tests
 - missing docs are stated instead of guessed
 
@@ -60,4 +61,4 @@ Run the `FIX` command shown in the block once. If the miss repeats, state that t
 - Do not hide stale or missing docs.
 - Do not add new default libraries without official source URLs.
 - Do not retry reworded queries after a reported miss; close the cache gap instead.
-- Do not present a `live-unversioned` docs page as if it were pinned to the project version.
+- Do not present a `live-unversioned` or `docs-commit` page as if it were pinned to the project version.

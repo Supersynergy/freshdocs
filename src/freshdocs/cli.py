@@ -13,8 +13,12 @@ from .core import (
     detect_project_libs,
     doctor,
     ensure_registry,
+    STATE_PATH,
     export_synapse,
+    load_json,
+    outdated_index_versions,
     project_analysis,
+    prune_outdated_index,
     search,
     status_rows,
     sync_library,
@@ -37,6 +41,11 @@ def build_parser() -> argparse.ArgumentParser:
     sync = sub.add_parser("sync", help="fetch and index docs")
     sync.add_argument("--lib", action="append", help="library name; repeatable")
     sync.add_argument("--all", action="store_true", help="sync every registered library")
+    sync.add_argument(
+        "--outdated",
+        action="store_true",
+        help="re-index every cached version built by an older indexer, including pinned older versions",
+    )
     sync.add_argument("--force", action="store_true", help="re-index even when version is unchanged")
     sync.add_argument("--project", help="detect libraries and exact versions from this project")
     sync.add_argument("--version", help="exact version; requires one --lib")
@@ -82,6 +91,14 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="check local cache and FTS index")
     sub.add_parser("mcp", help="run MCP stdio server")
 
+    prune = sub.add_parser("prune", help="drop cached versions built by an older indexer")
+    prune.add_argument(
+        "--include-current",
+        action="store_true",
+        help="also drop the version each library currently tracks",
+    )
+    prune.add_argument("--dry-run", action="store_true", help="list what would be dropped")
+
     sources = sub.add_parser("sources", help="print source, repo, and tool harvest plan for language ecosystems")
     sources.add_argument("--top-languages", type=int, default=50, help="number of language rows to emit; use 300 for broad agent coverage")
     sources.add_argument("--live", action="store_true", help="refresh GitHut and GitHub Linguist language sources before rendering")
@@ -96,6 +113,27 @@ def cmd_init() -> int:
     return code
 
 
+def cmd_prune(args: argparse.Namespace) -> int:
+    if args.dry_run:
+        stale = outdated_index_versions()
+        if not args.include_current:
+            state = load_json(STATE_PATH, {})
+            stale = [
+                (lib, version)
+                for lib, version in stale
+                if not (isinstance(state.get(lib), dict) and state[lib].get("version") == version)
+            ]
+        for lib, version in stale:
+            print(f"would drop {lib} {version}")
+        print(f"{len(stale)} cached version(s) would be dropped")
+        return 0
+    removed = prune_outdated_index(keep_current=not args.include_current)
+    for lib, version in removed:
+        print(f"dropped {lib} {version}")
+    print(f"{len(removed)} cached version(s) dropped; each is re-fetched with the current indexer when a project needs it")
+    return 0
+
+
 def cmd_sync(args: argparse.Namespace) -> int:
     reg = ensure_registry()["libs"]
     analysis = None
@@ -103,18 +141,29 @@ def cmd_sync(args: argparse.Namespace) -> int:
     if args.project:
         analysis = project_analysis(pathlib.Path(args.project).expanduser().resolve())
         versions = detected_versions(analysis)
-    libs = args.lib or ([item["lib"] for item in analysis["libraries"]] if analysis else []) or ([] if not args.all else sorted(reg))
-    if not libs:
-        print("nothing to sync: pass --lib NAME, --project PATH, or --all", file=sys.stderr)
-        return 2
-    if args.version and len(libs) != 1:
-        print("--version requires exactly one --lib", file=sys.stderr)
-        return 2
+
+    # Each entry is (library, explicit version or None). --outdated is the only mode
+    # that names older pinned versions, which --all never revisits.
+    targets: list[tuple[str, str | None]] = []
+    if args.outdated:
+        targets = [(lib, version) for lib, version in outdated_index_versions() if lib in reg]
+        if not targets:
+            print("nothing outdated: every cached version was built by the current indexer")
+            return 0
+    else:
+        libs = args.lib or ([item["lib"] for item in analysis["libraries"]] if analysis else []) or ([] if not args.all else sorted(reg))
+        if not libs:
+            print("nothing to sync: pass --lib NAME, --project PATH, --all, or --outdated", file=sys.stderr)
+            return 2
+        if args.version and len(libs) != 1:
+            print("--version requires exactly one --lib", file=sys.stderr)
+            return 2
+        targets = [(lib, args.version or versions.get(lib)) for lib in libs]
+
     failed = 0
-    for lib in libs:
+    for lib, target in targets:
         try:
-            target = args.version or versions.get(lib)
-            result = sync_library(lib, force=args.force, version=target)
+            result = sync_library(lib, force=args.force or args.outdated, version=target)
             pin = "exact-ref" if result.get("exact_ref") else "branch-fallback"
             print(
                 f"{result['lib']:18} {result['version']:14} {result['status']} "
@@ -276,6 +325,8 @@ def main(argv: list[str] | None = None) -> int:
         code, messages = doctor()
         print("\n".join(messages))
         return code
+    if args.cmd == "prune":
+        return cmd_prune(args)
     if args.cmd == "mcp":
         from .mcp import run_stdio
 

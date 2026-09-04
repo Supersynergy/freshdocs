@@ -76,6 +76,18 @@ So a project pinned to `ruff 0.14.14` gets `0.14.14` docs even while the cache a
 `0.16.6`. That difference is the point: an agent writing against your lockfile needs the
 API you have, not the API upstream shipped last week.
 
+### Keeping The Cache Honest
+
+`freshdocs doctor` reports cached versions that an older indexer produced. Drop them:
+
+```sh
+freshdocs prune            # --dry-run to preview
+```
+
+Dropping is instant and safe: a pruned version is re-fetched with the current pipeline
+as soon as a project pins to it. Use `freshdocs sync --outdated` instead when you want
+those versions re-indexed up front.
+
 ### When Freshdocs Has Nothing
 
 A miss is reported as a cache gap with the command that closes it, and it tells the agent not to retry reworded queries against a cache that cannot answer them:
@@ -108,7 +120,7 @@ Expected result: a compact `FRESHDOCS CONTEXT` block with library, exact project
 |---|---|
 | Project version | Freshdocs reads the lockfile before deciding which version belongs in the prompt. |
 | Fetch date | Reviewers see when the document content—not only the registry version—was fetched. |
-| Ref status | `exact-ref` means a matching tag was found; `branch-fallback` and `live-unversioned` are explicit warnings. |
+| Ref status | `exact-ref` is the library's own version tag; `docs-commit <sha>` is a docs repository read at a fixed commit; `branch-fallback` and `live-unversioned` are explicit warnings. |
 | Source label | Snippets point back to docs, changelog, `llms.txt`, or registry data. |
 | Explicit miss | Empty cache and stale docs are visible instead of silently guessed. |
 
