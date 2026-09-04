@@ -10,6 +10,7 @@ import sys
 from . import __version__
 from .core import (
     add_library,
+    cached_release_dates,
     context_pack,
     detect_project_libs,
     doctor,
@@ -20,13 +21,16 @@ from .core import (
     load_json,
     model_cutoff,
     outdated_index_versions,
+    measured_cutoffs,
     project_analysis,
     prune_outdated_index,
+    record_measured_cutoff,
     set_model_cutoff,
     search,
     status_rows,
     sync_library,
 )
+from . import bench
 from .analyzer import detected_versions
 from .gap import DEFAULT_MODEL_CUTOFFS, summarise
 from .routing import routed_context
@@ -104,8 +108,17 @@ def build_parser() -> argparse.ArgumentParser:
     gap.add_argument("--cutoff", help="override the model's training cutoff, YYYY-MM-DD")
     gap.add_argument("--json", action="store_true")
 
-    models = sub.add_parser("models", help="list or override model training cutoffs")
+    models = sub.add_parser("models", help="list, measure, or override model training cutoffs")
     models.add_argument("--set", nargs=2, metavar=("MODEL", "CUTOFF"), help="record a cutoff for a model id")
+    models.add_argument("--probe", action="store_true", help="print the knowledge probe for the calling model to answer")
+    models.add_argument(
+        "--record",
+        nargs=2,
+        metavar=("MODEL", "ANSWER_JSON"),
+        help="score a probe answer (JSON string or @file) and record the measured cutoff",
+    )
+    models.add_argument("--import", dest="import_path", metavar="FILE", help="import a cutoff_bench.py database")
+    models.add_argument("--json", action="store_true")
 
     prune = sub.add_parser("prune", help="drop cached versions built by an older indexer")
     prune.add_argument(
@@ -157,6 +170,11 @@ def cmd_gap(args: argparse.Namespace) -> int:
     return 0
 
 
+def _panel_dates() -> dict[str, dict[str, str]]:
+    reg = ensure_registry()["libs"]
+    return {lib: cached_release_dates(lib, reg[lib]) for lib in bench.PROBE_PANEL if lib in reg}
+
+
 def cmd_models(args: argparse.Namespace) -> int:
     if args.set:
         model, cutoff = args.set
@@ -166,11 +184,61 @@ def cmd_models(args: argparse.Namespace) -> int:
         set_model_cutoff(model, cutoff)
         print(f"{model}: cutoff {cutoff}")
         return 0
+
+    if args.probe:
+        print(bench.build_prompt())
+        print()
+        print("# Answer from memory, then record it:")
+        print("#   freshdocs models --record <your-model-id> '<the JSON you produced>'")
+        return 0
+
+    if args.record:
+        model, raw = args.record
+        if raw.startswith("@"):
+            raw = pathlib.Path(raw[1:]).read_text()
+        answers = bench.parse_answer(raw)
+        if not answers:
+            print("could not parse a package->version JSON object from the answer", file=sys.stderr)
+            return 2
+        est = bench.estimate_cutoff(model, answers, _panel_dates())
+        print(bench.render(est))
+        if not est.cutoff:
+            print("not recorded: too few verified answers to trust a cutoff", file=sys.stderr)
+            return 1
+        record_measured_cutoff(model, est.cutoff, est.per_library, "self-probe")
+        print(f"recorded: {model} -> {est.cutoff} ({est.verified} libraries measured)")
+        return 0
+
+    if args.import_path:
+        db = json.loads(pathlib.Path(args.import_path).read_text())
+        count = 0
+        for model, rec in (db.get("probed") or {}).items():
+            # "model@variant" entries are experiment notes (a different prompt or
+            # context for the same model), kept in the database as evidence but never
+            # matched against a live model id.
+            if "@" in model:
+                continue
+            if rec.get("cutoff") and isinstance(rec.get("per_library"), dict):
+                record_measured_cutoff(model, rec["cutoff"], rec["per_library"], rec.get("source") or "cutoff_bench")
+                count += 1
+        print(f"imported {count} measured cutoff(s) from {args.import_path}")
+        return 0
+
+    measured = measured_cutoffs()
     overrides = ensure_registry().get("models")
     overrides = overrides if isinstance(overrides, dict) else {}
+    if args.json:
+        print(json.dumps({"measured": measured, "overrides": overrides, "defaults": DEFAULT_MODEL_CUTOFFS}, indent=1))
+        return 0
+    if measured:
+        print("measured (by probe; per-library dates apply):")
+        for model, rec in sorted(measured.items()):
+            libs = len(rec.get("per_library") or {})
+            print(f"  {model:44} {rec.get('cutoff')}  {libs} libraries, {rec.get('source')} {rec.get('recorded')}")
+    print("manual and default:")
     for model, cutoff in sorted({**DEFAULT_MODEL_CUTOFFS, **overrides}.items()):
         origin = "override" if model in overrides else "default (approximate)"
-        print(f"  {model:22} {cutoff}  {origin}")
+        print(f"  {model:44} {cutoff}  {origin}")
     return 0
 
 

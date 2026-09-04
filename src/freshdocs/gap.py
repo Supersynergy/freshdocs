@@ -207,8 +207,15 @@ def classify(
     dates: dict[str, str],
     cutoff: str | None,
     today: dt.date | None = None,
+    measured: bool = False,
 ) -> GapVerdict:
-    """Decide whether this library's docs must enter the prompt."""
+    """Decide whether this library's docs must enter the prompt.
+
+    ``measured`` means the cutoff is the release date of a version this exact model
+    named correctly in a probe. That is direct evidence of knowledge, so the safety
+    margin that guards an approximate vendor date does not apply: the release on the
+    cutoff day itself is known, and only strictly newer releases are gaps.
+    """
     if not cutoff:
         return GapVerdict(lib, version, STATUS_UNKNOWN, "no training cutoff known for this model")
     cutoff_date = parse_date(cutoff)
@@ -222,7 +229,7 @@ def classify(
     if not released:
         return GapVerdict(lib, version, STATUS_UNKNOWN, "no publication date for this version", cutoff=cutoff)
 
-    horizon = cutoff_date - dt.timedelta(days=CUTOFF_MARGIN_DAYS)
+    horizon = cutoff_date if measured else cutoff_date - dt.timedelta(days=CUTOFF_MARGIN_DAYS)
     released_text = released.isoformat()
     if released > horizon:
         return GapVerdict(lib, version, STATUS_AHEAD, "released at or after the training cutoff", released_text, cutoff)

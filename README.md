@@ -98,7 +98,7 @@ model: claude-sonnet-4-5 (matched claude-sonnet-4, cutoff 2025-01-01)
 |---|---|---|
 | `ahead` | Released after the cutoff. The model cannot know it. | full context |
 | `behind` | The project pins an older release than the model most likely learned, so it may write an API that exists upstream but not here. | full context |
-| `covered` | The model's knowledge and the project agree. | short confirmation |
+| `covered` | The model's knowledge and the project agree. | one pointer: header and source URL, no prose |
 | `unknown` | Any input is missing. | full context, with the reason |
 
 Pass `--model` to `context` and the pack carries the same reasoning, spends its budget
@@ -109,10 +109,55 @@ freshdocs context "bearer auth" --project . --model claude-sonnet-4-5 --sync-sta
 export FRESHDOCS_MODEL=claude-sonnet-4-5   # or set it once
 ```
 
-Built-in cutoffs are approximate and matched by longest prefix. Correct one at any time:
+Measured on a four-library project with a probed model (`claude-fable-5-1`, see below):
+
+| Situation | Hits | Approx. tokens |
+|---|---|---|
+| no `--model` | 8 | 2430 |
+| one library is a gap, three are covered | 5 full + pointers | 1700 |
+| every library is covered | 1 pointer | 240 |
+
+The budget is split per library by verdict, so a library the model has never seen is
+guaranteed its share and is listed first; a library that merely scores higher on the
+query words cannot crowd it out.
+
+#### Measure the cutoff instead of guessing it
+
+A vendor's published cutoff is one month for the whole model. What matters is narrower
+and measurable: for each library, which release is the newest the model can name
+correctly? Freshdocs asks, checks every answer against the package registry, and
+records the result.
 
 ```sh
-freshdocs models                              # list what is known
+freshdocs models --probe                 # prints the question; answer it from memory
+freshdocs models --record <model-id> '<the JSON you produced>'
+```
+
+```text
+model: claude-fable-5-1
+cutoff: 2025-06-11  (median release date of 20 verified answers)
+verified 20  hallucinated 0  unanswered 0
+  ok  hono           4.7.11 released 2025-05-31, 452d behind 4.13.5
+  ok  ratatui        0.29.0 released 2024-10-21, 606d behind 0.30.2
+  ...
+recorded: claude-fable-5-1 -> 2025-06-11 (20 libraries measured)
+```
+
+Two things make this better than a date from a web page. The cutoff is the **median**,
+so one lucky late answer cannot pull it forward and suppress documentation the model
+needs. And the **per-library dates are kept**: coverage is uneven, and a model that
+knows polars to June may know ratatui only to the previous October. Gap detection uses
+the per-library date wherever one was measured.
+
+Precedence is `--cutoff` (your word) > measured probe > `models --set` > shipped table.
+Measured beats manual because it is evidence about this model, not a number copied
+from a vendor page. An MCP client does the same in two calls to `freshdocs_probe`.
+
+`tools/cutoff_bench.py` runs the probe across OpenRouter models and writes a database
+that `freshdocs models --import` reads. The shipped table remains as a last resort:
+
+```sh
+freshdocs models                              # measured, overrides, defaults
 freshdocs models --set my-local-model 2025-06-01
 ```
 

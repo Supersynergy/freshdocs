@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 - 2026-09-04
+
+- Added a knowledge-cutoff probe: `freshdocs models --probe` asks a model for the newest release it knows of each of 20 libraries, `--record` checks every answer against the package registry and stores the median release date as the measured cutoff together with per-library dates.
+- Added `freshdocs_probe` and `freshdocs_gap` MCP tools so an agent can measure itself in two calls and then load only its gaps.
+- Changed cutoff precedence to `--cutoff` > measured probe > `models --set` > shipped table; a measured per-library date applies without the 45-day safety margin, because it is the release the model named correctly.
+- Added `tools/cutoff_bench.py` to run the probe across OpenRouter models, and `models --import` to load its database.
+- Changed context budgeting to split slots per library by verdict, so a library the model has never seen is guaranteed its share instead of being crowded out by one that merely scores higher on the query words.
+- Changed search to walk a precise-to-loose match plan and top up, with a middle tier that requires any two query terms.
+- Changed ranking to place CHANGELOG and MIGRATION chunks below guide pages for usage questions, while questions about upgrading or breaking changes lift the penalty.
+- Changed a covered library's hit to a pointer (header and source URL, no prose): the model knows that release, so the prose would only repeat its training. On a project whose libraries a model fully covers, the pack shrinks from about 2400 to about 240 tokens.
+- Added `data/model_cutoffs.json`, measured cutoffs for 16 models with per-library dates, and `data/README.md` with the analysis.
+- Changed the probe wording after measuring that a "prefer old if unsure" prompt moved the same model's cutoff a year earlier with no reduction in hallucinations.
+
 ## 0.4.0 - 2026-09-04
 
 - Added model-aware gap detection: `--model` compares each installed version's publication date against the model's training cutoff and loads documentation only for what that model cannot already know.

@@ -6,7 +6,21 @@ import sys
 from typing import Any
 
 from . import __version__
-from .core import context_pack, detect_project_libs, project_analysis, search, sync_library
+from . import bench
+from .analyzer import detected_versions
+from .core import (
+    cached_release_dates,
+    context_pack,
+    detect_project_libs,
+    ensure_registry,
+    gap_verdicts,
+    model_cutoff,
+    project_analysis,
+    record_measured_cutoff,
+    search,
+    sync_library,
+)
+from .gap import summarise
 from .sources import build_source_plan, render_source_plan
 
 
@@ -101,6 +115,34 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "freshdocs_probe",
+        "description": (
+            "Measure your own knowledge cutoff. Call once with no answer to get the question; "
+            "answer it from memory; call again with model and answer to record the result. "
+            "Afterwards freshdocs_context loads only what your training cannot cover."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "model": {"type": "string", "description": "your model identifier"},
+                "answer": {"type": "string", "description": "the JSON object you produced for the probe question"},
+            },
+        },
+    },
+    {
+        "name": "freshdocs_gap",
+        "description": "Per-library verdict: which of a project's dependencies a model's training cannot cover.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "default": "."},
+                "model": {"type": "string"},
+                "cutoff": {"type": "string"},
+            },
+            "required": ["model"],
+        },
+    },
 ]
 
 
@@ -136,7 +178,41 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
         top_languages = int(args.get("top_languages", 50))
         fmt = str(args.get("format", "markdown"))
         return tool_text(render_source_plan(build_source_plan(top_languages, bool(args.get("live", False))), fmt))
+    if name == "freshdocs_probe":
+        model, answer = args.get("model"), args.get("answer")
+        if not answer:
+            return tool_text(
+                bench.build_prompt()
+                + "\n\nAnswer from memory, then call freshdocs_probe again with model and answer."
+            )
+        answers = bench.parse_answer(str(answer))
+        if not answers or not model:
+            return tool_text("could not parse a package->version JSON object; nothing recorded")
+        est = bench.estimate_cutoff(str(model), answers, _panel_dates())
+        if est.cutoff:
+            record_measured_cutoff(str(model), est.cutoff, est.per_library, "mcp-self-probe")
+            tail = f"\n\nrecorded: {model} -> {est.cutoff}. Pass model={model!r} to freshdocs_context from now on."
+        else:
+            tail = "\n\nnot recorded: too few verified answers."
+        return tool_text(bench.render(est) + tail)
+    if name == "freshdocs_gap":
+        root = pathlib.Path(args.get("project", ".")).expanduser().resolve()
+        versions = detected_versions(project_analysis(root))
+        verdicts = gap_verdicts(versions, args.get("model"), args.get("cutoff"))
+        _, matched, cutoff = model_cutoff(args.get("model"), args.get("cutoff"))
+        return tool_text(json.dumps({
+            "model": args.get("model"),
+            "matched": matched,
+            "cutoff": cutoff,
+            "verdicts": [v.as_dict() for v in verdicts],
+            "summary": summarise(verdicts),
+        }, indent=1))
     raise KeyError(f"unknown tool: {name}")
+
+
+def _panel_dates() -> dict[str, dict[str, str]]:
+    reg = ensure_registry()["libs"]
+    return {lib: cached_release_dates(lib, reg[lib]) for lib in bench.PROBE_PANEL if lib in reg}
 
 
 def run_stdio() -> int:

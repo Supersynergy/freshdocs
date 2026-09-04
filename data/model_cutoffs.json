@@ -1,0 +1,3473 @@
+{
+ "panel": [
+  "react",
+  "typescript",
+  "vite",
+  "vitest",
+  "hono",
+  "zod",
+  "tailwindcss",
+  "astro",
+  "bun",
+  "drizzle-orm",
+  "biome",
+  "fastapi",
+  "pydantic",
+  "polars",
+  "ruff",
+  "uv",
+  "tokio",
+  "axum",
+  "ratatui",
+  "tauri"
+ ],
+ "method": "median publication date of registry-verified answers to a 20-library recall probe",
+ "prompt_version": 2,
+ "probed": {
+  "dots-studio/dots-3-note-preview:free": {
+   "model": "dots-studio/dots-3-note-preview:free",
+   "cutoff": "2024-09-09",
+   "method": "median release date of 19 verified answers",
+   "verified": 19,
+   "hallucinated": 1,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-12-05",
+    "typescript": "2024-09-09",
+    "vite": "2024-12-20",
+    "vitest": "2024-11-26",
+    "hono": "2024-05-03",
+    "zod": "2024-05-08",
+    "astro": "2024-12-03",
+    "bun": "2024-07-13",
+    "drizzle-orm": "2024-05-31",
+    "biome": "2024-09-12",
+    "fastapi": "2024-09-17",
+    "pydantic": "2024-09-17",
+    "polars": "2025-01-16",
+    "ruff": "2024-08-15",
+    "uv": "2024-08-28",
+    "tokio": "2024-05-30",
+    "axum": "2023-11-27",
+    "ratatui": "2024-02-02",
+    "tauri": "2024-10-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.0.0",
+     "exists": true,
+     "released": "2024-12-05",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 593
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.6.2",
+     "exists": true,
+     "released": "2024-09-09",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 667
+    },
+    {
+     "lib": "vite",
+     "claimed": "6.0.5",
+     "exists": true,
+     "released": "2024-12-20",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 608
+    },
+    {
+     "lib": "vitest",
+     "claimed": "2.1.6",
+     "exists": true,
+     "released": "2024-11-26",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 646
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.3.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 845
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.8",
+     "exists": true,
+     "released": "2024-05-08",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 843
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.5.1",
+     "exists": false,
+     "released": null,
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": null
+    },
+    {
+     "lib": "astro",
+     "claimed": "5.0.1",
+     "exists": true,
+     "released": "2024-12-03",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 639
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.1.20",
+     "exists": true,
+     "released": "2024-07-13",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 783
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.31.0",
+     "exists": true,
+     "released": "2024-05-31",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 665
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.9.0",
+     "exists": true,
+     "released": "2024-09-12",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 721
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.115.0",
+     "exists": true,
+     "released": "2024-09-17",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 680
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.9.2",
+     "exists": true,
+     "released": "2024-09-17",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 710
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.20.0",
+     "exists": true,
+     "released": "2025-01-16",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 587
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.6.0",
+     "exists": true,
+     "released": "2024-08-15",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 749
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.4.0",
+     "exists": true,
+     "released": "2024-08-28",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 734
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.38.0",
+     "exists": true,
+     "released": "2024-05-30",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 781
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 868
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.0.0",
+     "exists": true,
+     "released": "2024-10-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 637
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "google/gemma-4-26b-a4b-it:free": {
+   "model": "google/gemma-4-26b-a4b-it:free",
+   "cutoff": "2023-12-17",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2022-06-14",
+    "typescript": "2023-12-06",
+    "vite": "2023-11-16",
+    "vitest": "2023-12-04",
+    "hono": "2024-02-09",
+    "zod": "2023-10-04",
+    "tailwindcss": "2023-12-19",
+    "astro": "2023-12-05",
+    "bun": "2023-09-08",
+    "drizzle-orm": "2023-11-09",
+    "biome": "2024-01-08",
+    "fastapi": "2024-01-11",
+    "pydantic": "2024-01-29",
+    "polars": "2023-12-16",
+    "ruff": "2024-02-01",
+    "uv": "2024-02-15",
+    "tokio": "2024-02-02",
+    "axum": "2023-11-27",
+    "ratatui": "2024-02-02",
+    "tauri": "2024-07-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.2.0",
+     "exists": true,
+     "released": "2022-06-14",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 1498
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.3.3",
+     "exists": true,
+     "released": "2023-12-06",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 945
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.0.0",
+     "exists": true,
+     "released": "2023-11-16",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 1008
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-12-04",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 1004
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2024-02-09",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 929
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.22.4",
+     "exists": true,
+     "released": "2023-10-04",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 1060
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.0",
+     "exists": true,
+     "released": "2023-12-19",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 940
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2023-12-05",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 1003
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-09-08",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 1092
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.29.0",
+     "exists": true,
+     "released": "2023-11-09",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 869
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.5.0",
+     "exists": true,
+     "released": "2024-01-08",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 969
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.109.0",
+     "exists": true,
+     "released": "2024-01-11",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 930
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.6.0",
+     "exists": true,
+     "released": "2024-01-29",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 942
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.0",
+     "exists": true,
+     "released": "2023-12-16",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 984
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.2.0",
+     "exists": true,
+     "released": "2024-02-01",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 945
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.1.0",
+     "exists": true,
+     "released": "2024-02-15",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 929
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.36.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 899
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 868
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.7.0",
+     "exists": true,
+     "released": "2024-07-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 729
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 1
+  },
+  "inclusionai/ling-3.0-flash-fin:free": {
+   "model": "inclusionai/ling-3.0-flash-fin:free",
+   "cutoff": "2024-07-01",
+   "method": "median release date of 18 verified answers",
+   "verified": 18,
+   "hallucinated": 2,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-12-05",
+    "vite": "2024-11-26",
+    "vitest": "2024-09-12",
+    "zod": "2024-04-21",
+    "tailwindcss": "2025-01-21",
+    "astro": "2024-10-10",
+    "bun": "2024-04-01",
+    "drizzle-orm": "2024-03-07",
+    "biome": "2024-06-04",
+    "fastapi": "2024-05-03",
+    "pydantic": "2024-07-01",
+    "polars": "2024-07-01",
+    "ruff": "2025-03-14",
+    "uv": "2024-11-07",
+    "tokio": "2024-03-28",
+    "axum": "2023-11-27",
+    "ratatui": "2024-02-02",
+    "tauri": "2024-10-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.0.0",
+     "exists": true,
+     "released": "2024-12-05",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 593
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.7.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": null
+    },
+    {
+     "lib": "vite",
+     "claimed": "6.0.0",
+     "exists": true,
+     "released": "2024-11-26",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 632
+    },
+    {
+     "lib": "vitest",
+     "claimed": "2.1.0",
+     "exists": true,
+     "released": "2024-09-12",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 721
+    },
+    {
+     "lib": "hono",
+     "claimed": "1.12.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": null
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.0",
+     "exists": true,
+     "released": "2024-04-21",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 860
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2025-01-21",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 541
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.16.0",
+     "exists": true,
+     "released": "2024-10-10",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 693
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.1.0",
+     "exists": true,
+     "released": "2024-04-01",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 886
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.30.0",
+     "exists": true,
+     "released": "2024-03-07",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 750
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.8.0",
+     "exists": true,
+     "released": "2024-06-04",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 821
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.111.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 817
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.8.0",
+     "exists": true,
+     "released": "2024-07-01",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 788
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2024-07-01",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 786
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.11.0",
+     "exists": true,
+     "released": "2025-03-14",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 538
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.5.0",
+     "exists": true,
+     "released": "2024-11-07",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 663
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.37.0",
+     "exists": true,
+     "released": "2024-03-28",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 844
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 868
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.0.0",
+     "exists": true,
+     "released": "2024-10-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 637
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 1
+  },
+  "liquid/lfm-2.5-2.6b:free": {
+   "model": "liquid/lfm-2.5-2.6b:free",
+   "cutoff": "2024-03-16",
+   "method": "median release date of 16 verified answers",
+   "verified": 16,
+   "hallucinated": 4,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-12-05",
+    "vite": "2023-11-16",
+    "vitest": "2023-12-04",
+    "hono": "2024-04-02",
+    "tailwindcss": "2023-12-19",
+    "astro": "2024-01-18",
+    "bun": "2025-01-22",
+    "drizzle-orm": "2023-04-17",
+    "biome": "2025-07-08",
+    "fastapi": "2024-08-02",
+    "pydantic": "2023-07-25",
+    "ruff": "2024-02-29",
+    "uv": "2024-08-28",
+    "tokio": "2023-08-16",
+    "ratatui": "2024-06-24",
+    "tauri": "2024-07-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.0.0",
+     "exists": true,
+     "released": "2024-12-05",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 593
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.3.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": null
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.0.0",
+     "exists": true,
+     "released": "2023-11-16",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 1008
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-12-04",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 1004
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.2.0",
+     "exists": true,
+     "released": "2024-04-02",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 876
+    },
+    {
+     "lib": "zod",
+     "claimed": "0.29.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": null
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.0",
+     "exists": true,
+     "released": "2023-12-19",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 940
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.2.0",
+     "exists": true,
+     "released": "2024-01-18",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 959
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.2.0",
+     "exists": true,
+     "released": "2025-01-22",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 590
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.24.0",
+     "exists": true,
+     "released": "2023-04-17",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 1075
+    },
+    {
+     "lib": "biome",
+     "claimed": "2.1.0",
+     "exists": true,
+     "released": "2025-07-08",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 422
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.112.0",
+     "exists": true,
+     "released": "2024-08-02",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 726
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.1.0",
+     "exists": true,
+     "released": "2023-07-25",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 1130
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.22.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": null
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.3.0",
+     "exists": true,
+     "released": "2024-02-29",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 917
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.4.0",
+     "exists": true,
+     "released": "2024-08-28",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 734
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.32.0",
+     "exists": true,
+     "released": "2023-08-16",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 1069
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.9.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": null
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.27.0",
+     "exists": true,
+     "released": "2024-06-24",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 725
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.7.0",
+     "exists": true,
+     "released": "2024-07-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 729
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 1
+  },
+  "minimax/minimax-m3:free": {
+   "model": "minimax/minimax-m3:free",
+   "cutoff": "2024-11-27",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-12-05",
+    "typescript": "2024-11-22",
+    "vite": "2024-12-05",
+    "vitest": "2024-12-02",
+    "hono": "2024-12-14",
+    "zod": "2024-05-08",
+    "tailwindcss": "2025-01-21",
+    "astro": "2025-01-10",
+    "bun": "2025-01-22",
+    "drizzle-orm": "2024-11-22",
+    "biome": "2024-10-17",
+    "fastapi": "2024-11-12",
+    "pydantic": "2024-09-17",
+    "polars": "2024-12-09",
+    "ruff": "2024-12-19",
+    "uv": "2024-12-17",
+    "tokio": "2024-11-07",
+    "axum": "2024-09-27",
+    "ratatui": "2024-08-07",
+    "tauri": "2024-11-11"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.0.0",
+     "exists": true,
+     "released": "2024-12-05",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 593
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.7.2",
+     "exists": true,
+     "released": "2024-11-22",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 593
+    },
+    {
+     "lib": "vite",
+     "claimed": "6.0.3",
+     "exists": true,
+     "released": "2024-12-05",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 623
+    },
+    {
+     "lib": "vitest",
+     "claimed": "2.1.8",
+     "exists": true,
+     "released": "2024-12-02",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 640
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.6.14",
+     "exists": true,
+     "released": "2024-12-14",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 620
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.8",
+     "exists": true,
+     "released": "2024-05-08",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 843
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2025-01-21",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 541
+    },
+    {
+     "lib": "astro",
+     "claimed": "5.1.5",
+     "exists": true,
+     "released": "2025-01-10",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 601
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.2.0",
+     "exists": true,
+     "released": "2025-01-22",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 590
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.36.4",
+     "exists": true,
+     "released": "2024-11-22",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 490
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.9.4",
+     "exists": true,
+     "released": "2024-10-17",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 686
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.115.5",
+     "exists": true,
+     "released": "2024-11-12",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 624
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.9.2",
+     "exists": true,
+     "released": "2024-09-17",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 710
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.17.1",
+     "exists": true,
+     "released": "2024-12-09",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 625
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.8.4",
+     "exists": true,
+     "released": "2024-12-19",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 623
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.5.10",
+     "exists": true,
+     "released": "2024-12-17",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 623
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.41.1",
+     "exists": true,
+     "released": "2024-11-07",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 620
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.7",
+     "exists": true,
+     "released": "2024-09-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 564
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.28.0",
+     "exists": true,
+     "released": "2024-08-07",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 681
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.1.1",
+     "exists": true,
+     "released": "2024-11-11",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 597
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": {
+   "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+   "cutoff": "2024-02-20",
+   "method": "median release date of 18 verified answers",
+   "verified": 18,
+   "hallucinated": 2,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-04-25",
+    "vite": "2024-03-20",
+    "vitest": "2024-02-16",
+    "hono": "2023-07-11",
+    "zod": "2024-04-21",
+    "tailwindcss": "2023-12-19",
+    "astro": "2023-09-28",
+    "bun": "2024-04-08",
+    "biome": "2023-09-15",
+    "fastapi": "2024-02-24",
+    "pydantic": "2024-01-29",
+    "polars": "2023-12-16",
+    "ruff": "2024-04-18",
+    "uv": "2024-11-07",
+    "tokio": "2023-12-08",
+    "axum": "2023-11-27",
+    "ratatui": "2024-06-24",
+    "tauri": "2024-10-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.3.0",
+     "exists": true,
+     "released": "2024-04-25",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 817
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.5.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": null
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.2.0",
+     "exists": true,
+     "released": "2024-03-20",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 883
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.3.0",
+     "exists": true,
+     "released": "2024-02-16",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 930
+    },
+    {
+     "lib": "hono",
+     "claimed": "3.3.0",
+     "exists": true,
+     "released": "2023-07-11",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 1142
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.0",
+     "exists": true,
+     "released": "2024-04-21",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 860
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.0",
+     "exists": true,
+     "released": "2023-12-19",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 940
+    },
+    {
+     "lib": "astro",
+     "claimed": "3.2.0",
+     "exists": true,
+     "released": "2023-09-28",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 1071
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.1.3",
+     "exists": true,
+     "released": "2024-04-08",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 879
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "2.2.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": null
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.2.0",
+     "exists": true,
+     "released": "2023-09-15",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 1084
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.110.0",
+     "exists": true,
+     "released": "2024-02-24",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 886
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.6.0",
+     "exists": true,
+     "released": "2024-01-29",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 942
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.0",
+     "exists": true,
+     "released": "2023-12-16",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 984
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.4.0",
+     "exists": true,
+     "released": "2024-04-18",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 868
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.5.0",
+     "exists": true,
+     "released": "2024-11-07",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 663
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.35.0",
+     "exists": true,
+     "released": "2023-12-08",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 955
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.27.0",
+     "exists": true,
+     "released": "2024-06-24",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 725
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.0.0",
+     "exists": true,
+     "released": "2024-10-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 637
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 1
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "cutoff": "2024-05-06",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-04-25",
+    "typescript": "2024-06-20",
+    "vite": "2024-06-13",
+    "vitest": "2024-05-03",
+    "hono": "2024-05-27",
+    "zod": "2024-04-21",
+    "tailwindcss": "2024-03-27",
+    "astro": "2024-05-09",
+    "bun": "2024-04-26",
+    "drizzle-orm": "2024-03-07",
+    "biome": "2024-06-04",
+    "fastapi": "2024-08-02",
+    "pydantic": "2024-07-01",
+    "polars": "2024-07-01",
+    "ruff": "2024-04-18",
+    "uv": "2024-05-22",
+    "tokio": "2024-07-23",
+    "axum": "2023-11-27",
+    "ratatui": "2023-12-18",
+    "tauri": "2024-02-18"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.3.0",
+     "exists": true,
+     "released": "2024-04-25",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 817
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.5.0~5.5.2",
+     "exists": true,
+     "released": "2024-06-20",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 748
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.3.0",
+     "exists": true,
+     "released": "2024-06-13",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 798
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.6.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 853
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.4.0",
+     "exists": true,
+     "released": "2024-05-27",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 821
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.0",
+     "exists": true,
+     "released": "2024-04-21",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 860
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.3",
+     "exists": true,
+     "released": "2024-03-27",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 841
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.8.0",
+     "exists": true,
+     "released": "2024-05-09",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 847
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.1.5",
+     "exists": true,
+     "released": "2024-04-26",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 861
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.30.0",
+     "exists": true,
+     "released": "2024-03-07",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 750
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.8.0",
+     "exists": true,
+     "released": "2024-06-04",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 821
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.112.0",
+     "exists": true,
+     "released": "2024-08-02",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 726
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.8.0",
+     "exists": true,
+     "released": "2024-07-01",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 788
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2024-07-01",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 786
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.4.0",
+     "exists": true,
+     "released": "2024-04-18",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 868
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.2.0",
+     "exists": true,
+     "released": "2024-05-22",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 832
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.39.0",
+     "exists": true,
+     "released": "2024-07-23",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 727
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.25.0",
+     "exists": true,
+     "released": "2023-12-18",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 914
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.6.0",
+     "exists": true,
+     "released": "2024-02-18",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 864
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "poolside/laguna-xs-2.1:free": {
+   "model": "poolside/laguna-xs-2.1:free",
+   "cutoff": "2023-11-21",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2022-06-14",
+    "typescript": "2023-12-06",
+    "vite": "2023-11-16",
+    "vitest": "2023-12-04",
+    "hono": "2024-02-09",
+    "zod": "2023-10-04",
+    "tailwindcss": "2023-12-19",
+    "astro": "2023-12-05",
+    "bun": "2023-09-08",
+    "drizzle-orm": "2023-08-06",
+    "biome": "2023-08-28",
+    "fastapi": "2023-07-07",
+    "pydantic": "2023-11-13",
+    "polars": "2023-12-16",
+    "ruff": "2023-10-16",
+    "uv": "2024-05-22",
+    "tokio": "2023-12-08",
+    "axum": "2023-11-27",
+    "ratatui": "2024-02-02",
+    "tauri": "2023-09-28"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.2.0",
+     "exists": true,
+     "released": "2022-06-14",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 1498
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.3.3",
+     "exists": true,
+     "released": "2023-12-06",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 945
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.0.0",
+     "exists": true,
+     "released": "2023-11-16",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 1008
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-12-04",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 1004
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2024-02-09",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 929
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.22.4",
+     "exists": true,
+     "released": "2023-10-04",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 1060
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.0",
+     "exists": true,
+     "released": "2023-12-19",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 940
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2023-12-05",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 1003
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-09-08",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 1092
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.28.0",
+     "exists": true,
+     "released": "2023-08-06",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 964
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-08-28",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 1102
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.100.0",
+     "exists": true,
+     "released": "2023-07-07",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 1118
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.5.0",
+     "exists": true,
+     "released": "2023-11-13",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 1019
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.0",
+     "exists": true,
+     "released": "2023-12-16",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 984
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.1.0",
+     "exists": true,
+     "released": "2023-10-16",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 1053
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.2.0",
+     "exists": true,
+     "released": "2024-05-22",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 832
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.35.0",
+     "exists": true,
+     "released": "2023-12-08",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 955
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 868
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.5.0",
+     "exists": true,
+     "released": "2023-09-28",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 1007
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 1
+  },
+  "google/gemma-4-31b-it:free": {
+   "model": "google/gemma-4-31b-it:free",
+   "cutoff": "2024-06-29",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-04-26",
+    "typescript": "2024-07-22",
+    "vite": "2024-10-23",
+    "vitest": "2024-09-13",
+    "hono": "2024-07-16",
+    "zod": "2024-05-08",
+    "tailwindcss": "2024-08-13",
+    "astro": "2024-06-26",
+    "bun": "2024-07-13",
+    "drizzle-orm": "2024-08-08",
+    "biome": "2024-06-27",
+    "fastapi": "2024-05-03",
+    "pydantic": "2024-06-12",
+    "polars": "2024-06-01",
+    "ruff": "2024-06-20",
+    "uv": "2024-09-13",
+    "tokio": "2024-07-16",
+    "axum": "2024-03-24",
+    "ratatui": "2024-02-12",
+    "tauri": "2024-07-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.3.1",
+     "exists": true,
+     "released": "2024-04-26",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 816
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.5.4",
+     "exists": true,
+     "released": "2024-07-22",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 716
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.4.10",
+     "exists": true,
+     "released": "2024-10-23",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 666
+    },
+    {
+     "lib": "vitest",
+     "claimed": "2.1.1",
+     "exists": true,
+     "released": "2024-09-13",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 720
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.5.0",
+     "exists": true,
+     "released": "2024-07-16",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 771
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.8",
+     "exists": true,
+     "released": "2024-05-08",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 843
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.10",
+     "exists": true,
+     "released": "2024-08-13",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 702
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.11.3",
+     "exists": true,
+     "released": "2024-06-26",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 799
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.1.20",
+     "exists": true,
+     "released": "2024-07-13",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 783
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.33.0",
+     "exists": true,
+     "released": "2024-08-08",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 596
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.8.3",
+     "exists": true,
+     "released": "2024-06-27",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 798
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.111.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 817
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.7.4",
+     "exists": true,
+     "released": "2024-06-12",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 807
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.31",
+     "exists": true,
+     "released": "2024-06-01",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 816
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.4.10",
+     "exists": true,
+     "released": "2024-06-20",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 805
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.4.10",
+     "exists": true,
+     "released": "2024-09-13",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 718
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.38.1",
+     "exists": true,
+     "released": "2024-07-16",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 734
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.5",
+     "exists": true,
+     "released": "2024-03-24",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 751
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.1",
+     "exists": true,
+     "released": "2024-02-12",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 858
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.7.0",
+     "exists": true,
+     "released": "2024-07-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 729
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "nvidia/nemotron-3-super-120b-a12b:free": {
+   "model": "nvidia/nemotron-3-super-120b-a12b:free",
+   "cutoff": "2024-04-11",
+   "method": "median release date of 17 verified answers",
+   "verified": 17,
+   "hallucinated": 3,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2022-06-14",
+    "typescript": "2024-04-10",
+    "vite": "2023-12-15",
+    "vitest": "2024-04-11",
+    "hono": "2024-04-02",
+    "astro": "2024-01-04",
+    "bun": "2025-01-22",
+    "drizzle-orm": "2024-03-07",
+    "biome": "2024-06-04",
+    "fastapi": "2024-08-02",
+    "pydantic": "2024-04-11",
+    "ruff": "2024-08-15",
+    "uv": "2024-11-07",
+    "tokio": "2024-05-30",
+    "axum": "2024-03-24",
+    "ratatui": "2024-02-02",
+    "tauri": "2024-11-09"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.2.0",
+     "exists": true,
+     "released": "2022-06-14",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 1498
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.4.5",
+     "exists": true,
+     "released": "2024-04-10",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 819
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.0.10",
+     "exists": true,
+     "released": "2023-12-15",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 979
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.5.0",
+     "exists": true,
+     "released": "2024-04-11",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 875
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.2.0",
+     "exists": true,
+     "released": "2024-04-02",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 876
+    },
+    {
+     "lib": "zod",
+     "claimed": "23.0.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": null
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.5.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": null
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.1.0",
+     "exists": true,
+     "released": "2024-01-04",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 973
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.2.0",
+     "exists": true,
+     "released": "2025-01-22",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 590
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.30.0",
+     "exists": true,
+     "released": "2024-03-07",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 750
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.8.0",
+     "exists": true,
+     "released": "2024-06-04",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 821
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.112.0",
+     "exists": true,
+     "released": "2024-08-02",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 726
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.7.0",
+     "exists": true,
+     "released": "2024-04-11",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 869
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.21.0",
+     "exists": false,
+     "released": null,
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": null
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.6.0",
+     "exists": true,
+     "released": "2024-08-15",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 749
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.5.0",
+     "exists": true,
+     "released": "2024-11-07",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 663
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.38.0",
+     "exists": true,
+     "released": "2024-05-30",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 781
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.5",
+     "exists": true,
+     "released": "2024-03-24",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 751
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 868
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.1.0",
+     "exists": true,
+     "released": "2024-11-09",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 599
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "nvidia/nemotron-3.5-lightning:free": {
+   "model": "nvidia/nemotron-3.5-lightning:free",
+   "cutoff": "2024-05-30",
+   "method": "median release date of 19 verified answers",
+   "verified": 19,
+   "hallucinated": 1,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2024-04-25",
+    "typescript": "2024-07-01",
+    "vite": "2024-09-25",
+    "vitest": "2024-12-02",
+    "hono": "2024-04-18",
+    "zod": "2024-05-08",
+    "tailwindcss": "2024-01-05",
+    "astro": "2024-01-04",
+    "bun": "2023-09-08",
+    "drizzle-orm": "2024-10-15",
+    "biome": "2024-09-12",
+    "fastapi": "2024-02-24",
+    "pydantic": "2024-12-18",
+    "polars": "2024-02-19",
+    "ruff": "2024-06-27",
+    "uv": "2024-11-07",
+    "tokio": "2024-05-30",
+    "ratatui": "2023-12-18",
+    "tauri": "2024-11-09"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.3.0",
+     "exists": true,
+     "released": "2024-04-25",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 817
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.5.3",
+     "exists": true,
+     "released": "2024-07-01",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 737
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.4.8",
+     "exists": true,
+     "released": "2024-09-25",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 694
+    },
+    {
+     "lib": "vitest",
+     "claimed": "2.1.8",
+     "exists": true,
+     "released": "2024-12-02",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 640
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.2.5",
+     "exists": true,
+     "released": "2024-04-18",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 860
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.8",
+     "exists": true,
+     "released": "2024-05-08",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 843
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.1",
+     "exists": true,
+     "released": "2024-01-05",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 923
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.1.0",
+     "exists": true,
+     "released": "2024-01-04",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 973
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-09-08",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 1092
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.35.0",
+     "exists": true,
+     "released": "2024-10-15",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 528
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.9.0",
+     "exists": true,
+     "released": "2024-09-12",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 721
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.110.0",
+     "exists": true,
+     "released": "2024-02-24",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 886
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.10.4",
+     "exists": true,
+     "released": "2024-12-18",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 618
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.10",
+     "exists": true,
+     "released": "2024-02-19",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 919
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.5.0",
+     "exists": true,
+     "released": "2024-06-27",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 798
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.5.0",
+     "exists": true,
+     "released": "2024-11-07",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 663
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.38.0",
+     "exists": true,
+     "released": "2024-05-30",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 781
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.10",
+     "exists": false,
+     "released": null,
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": null
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.25.0",
+     "exists": true,
+     "released": "2023-12-18",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 914
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.1.0",
+     "exists": true,
+     "released": "2024-11-09",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 599
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "poolside/laguna-s-2.1:free": {
+   "model": "poolside/laguna-s-2.1:free",
+   "cutoff": "2023-12-19",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2022-06-14",
+    "typescript": "2023-12-06",
+    "vite": "2023-12-04",
+    "vitest": "2024-01-26",
+    "hono": "2024-03-11",
+    "zod": "2023-10-04",
+    "tailwindcss": "2023-12-19",
+    "astro": "2023-12-05",
+    "bun": "2024-01-21",
+    "drizzle-orm": "2024-01-02",
+    "biome": "2023-11-27",
+    "fastapi": "2023-12-26",
+    "pydantic": "2023-11-22",
+    "polars": "2024-01-17",
+    "ruff": "2023-12-21",
+    "uv": "2024-02-22",
+    "tokio": "2023-12-19",
+    "axum": "2023-12-29",
+    "ratatui": "2023-10-23",
+    "tauri": "2023-10-02"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.2.0",
+     "exists": true,
+     "released": "2022-06-14",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 1498
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.3.3",
+     "exists": true,
+     "released": "2023-12-06",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 945
+    },
+    {
+     "lib": "vite",
+     "claimed": "4.5.1",
+     "exists": true,
+     "released": "2023-12-04",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 990
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.2.2",
+     "exists": true,
+     "released": "2024-01-26",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 951
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.1.0",
+     "exists": true,
+     "released": "2024-03-11",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 898
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.22.4",
+     "exists": true,
+     "released": "2023-10-04",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 1060
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.0",
+     "exists": true,
+     "released": "2023-12-19",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 940
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2023-12-05",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 1003
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.0.25",
+     "exists": true,
+     "released": "2024-01-21",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 957
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.29.3",
+     "exists": true,
+     "released": "2024-01-02",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 815
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.4.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 1011
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.108.0",
+     "exists": true,
+     "released": "2023-12-26",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 946
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.5.2",
+     "exists": true,
+     "released": "2023-11-22",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 1010
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.5",
+     "exists": true,
+     "released": "2024-01-17",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 952
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.1.9",
+     "exists": true,
+     "released": "2023-12-21",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 987
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.1.7",
+     "exists": true,
+     "released": "2024-02-22",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 922
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.35.1",
+     "exists": true,
+     "released": "2023-12-19",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 944
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.3",
+     "exists": true,
+     "released": "2023-12-29",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 837
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.24.0",
+     "exists": true,
+     "released": "2023-10-23",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 970
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.5.1",
+     "exists": true,
+     "released": "2023-10-02",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 1003
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "prompt_version": 2
+  },
+  "claude-fable-5-1": {
+   "model": "claude-fable-5-1",
+   "cutoff": "2025-06-11",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2025-03-28",
+    "typescript": "2025-04-05",
+    "vite": "2025-05-05",
+    "vitest": "2025-06-17",
+    "hono": "2025-05-31",
+    "zod": "2025-06-16",
+    "tailwindcss": "2025-06-11",
+    "astro": "2025-06-13",
+    "bun": "2025-06-21",
+    "drizzle-orm": "2025-06-04",
+    "biome": "2025-06-27",
+    "fastapi": "2025-06-17",
+    "pydantic": "2025-06-14",
+    "polars": "2025-06-18",
+    "ruff": "2025-06-17",
+    "uv": "2025-06-12",
+    "tokio": "2025-05-24",
+    "axum": "2025-04-30",
+    "ratatui": "2024-10-21",
+    "tauri": "2025-04-21"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.1.0",
+     "exists": true,
+     "released": "2025-03-28",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 480
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.8.3",
+     "exists": true,
+     "released": "2025-04-05",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 459
+    },
+    {
+     "lib": "vite",
+     "claimed": "6.3.5",
+     "exists": true,
+     "released": "2025-05-05",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 472
+    },
+    {
+     "lib": "vitest",
+     "claimed": "3.2.4",
+     "exists": true,
+     "released": "2025-06-17",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 443
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.7.11",
+     "exists": true,
+     "released": "2025-05-31",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 452
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.25.67",
+     "exists": true,
+     "released": "2025-06-16",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 439
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "4.1.10",
+     "exists": true,
+     "released": "2025-06-11",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 400
+    },
+    {
+     "lib": "astro",
+     "claimed": "5.9.3",
+     "exists": true,
+     "released": "2025-06-13",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 447
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.2.17",
+     "exists": true,
+     "released": "2025-06-21",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 440
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.44.2",
+     "exists": true,
+     "released": "2025-06-04",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 296
+    },
+    {
+     "lib": "biome",
+     "claimed": "2.0.6",
+     "exists": true,
+     "released": "2025-06-27",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 433
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.115.13",
+     "exists": true,
+     "released": "2025-06-17",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 407
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.11.7",
+     "exists": true,
+     "released": "2025-06-14",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 440
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.31.0",
+     "exists": true,
+     "released": "2025-06-18",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 434
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.12.0",
+     "exists": true,
+     "released": "2025-06-17",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 443
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.7.13",
+     "exists": true,
+     "released": "2025-06-12",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 446
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.45.1",
+     "exists": true,
+     "released": "2025-05-24",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 422
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.8.4",
+     "exists": true,
+     "released": "2025-04-30",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 349
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.29.0",
+     "exists": true,
+     "released": "2024-10-21",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 606
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.5.1",
+     "exists": true,
+     "released": "2025-04-21",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 436
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "note": "main session self-probe",
+   "prompt_version": 2,
+   "source": "self-probe"
+  },
+  "claude-fable-5-1@subagent-strict": {
+   "model": "claude-fable-5-1@subagent-strict",
+   "cutoff": "2024-05-02",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2022-06-14",
+    "typescript": "2024-04-10",
+    "vite": "2024-03-20",
+    "vitest": "2024-05-03",
+    "hono": "2024-05-03",
+    "zod": "2024-05-08",
+    "tailwindcss": "2024-03-27",
+    "astro": "2024-05-09",
+    "bun": "2024-05-10",
+    "drizzle-orm": "2024-05-01",
+    "biome": "2024-05-06",
+    "fastapi": "2024-05-03",
+    "pydantic": "2024-04-23",
+    "polars": "2024-05-08",
+    "ruff": "2024-05-09",
+    "uv": "2024-05-14",
+    "tokio": "2024-03-28",
+    "axum": "2024-03-24",
+    "ratatui": "2024-04-15",
+    "tauri": "2024-04-22"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.2.0",
+     "exists": true,
+     "released": "2022-06-14",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 1498
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.4.5",
+     "exists": true,
+     "released": "2024-04-10",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 819
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.2.0",
+     "exists": true,
+     "released": "2024-03-20",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 883
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.6.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 853
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.3.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 845
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.23.8",
+     "exists": true,
+     "released": "2024-05-08",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 843
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.4.3",
+     "exists": true,
+     "released": "2024-03-27",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 841
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.8.0",
+     "exists": true,
+     "released": "2024-05-09",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 847
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.1.8",
+     "exists": true,
+     "released": "2024-05-10",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 847
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.30.10",
+     "exists": true,
+     "released": "2024-05-01",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 695
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.7.3",
+     "exists": true,
+     "released": "2024-05-06",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 850
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.111.0",
+     "exists": true,
+     "released": "2024-05-03",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 817
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.7.1",
+     "exists": true,
+     "released": "2024-04-23",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 857
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.20.25",
+     "exists": true,
+     "released": "2024-05-08",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 840
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.4.4",
+     "exists": true,
+     "released": "2024-05-09",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 847
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.1.44",
+     "exists": true,
+     "released": "2024-05-14",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 840
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.37.0",
+     "exists": true,
+     "released": "2024-03-28",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 844
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.5",
+     "exists": true,
+     "released": "2024-03-24",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 751
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.2",
+     "exists": true,
+     "released": "2024-04-15",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 795
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.6.2",
+     "exists": true,
+     "released": "2024-04-22",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 800
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "note": "subagent, strict prompt v1",
+   "prompt_version": 1,
+   "source": "anthropic-subagent"
+  },
+  "claude-fable-5-1@subagent": {
+   "model": "claude-fable-5-1@subagent",
+   "cutoff": "2025-05-16",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2025-03-28",
+    "typescript": "2025-04-05",
+    "vite": "2025-05-05",
+    "vitest": "2025-05-19",
+    "hono": "2025-05-17",
+    "zod": "2025-05-23",
+    "tailwindcss": "2025-05-15",
+    "astro": "2025-05-22",
+    "bun": "2025-05-21",
+    "drizzle-orm": "2025-04-25",
+    "biome": "2024-10-17",
+    "fastapi": "2025-03-23",
+    "pydantic": "2025-05-22",
+    "polars": "2025-05-21",
+    "ruff": "2025-05-22",
+    "uv": "2025-05-24",
+    "tokio": "2025-05-24",
+    "axum": "2025-04-30",
+    "ratatui": "2024-10-21",
+    "tauri": "2025-04-21"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "19.1.0",
+     "exists": true,
+     "released": "2025-03-28",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 480
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.8.3",
+     "exists": true,
+     "released": "2025-04-05",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 459
+    },
+    {
+     "lib": "vite",
+     "claimed": "6.3.5",
+     "exists": true,
+     "released": "2025-05-05",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 472
+    },
+    {
+     "lib": "vitest",
+     "claimed": "3.1.4",
+     "exists": true,
+     "released": "2025-05-19",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 472
+    },
+    {
+     "lib": "hono",
+     "claimed": "4.7.10",
+     "exists": true,
+     "released": "2025-05-17",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 466
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.25.28",
+     "exists": true,
+     "released": "2025-05-23",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 463
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "4.1.7",
+     "exists": true,
+     "released": "2025-05-15",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 427
+    },
+    {
+     "lib": "astro",
+     "claimed": "5.8.0",
+     "exists": true,
+     "released": "2025-05-22",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 469
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.2.14",
+     "exists": true,
+     "released": "2025-05-21",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 471
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.43.1",
+     "exists": true,
+     "released": "2025-04-25",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 336
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.9.4",
+     "exists": true,
+     "released": "2024-10-17",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 686
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.115.12",
+     "exists": true,
+     "released": "2025-03-23",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 493
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.11.5",
+     "exists": true,
+     "released": "2025-05-22",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 463
+    },
+    {
+     "lib": "polars",
+     "claimed": "1.30.0",
+     "exists": true,
+     "released": "2025-05-21",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 462
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.11.11",
+     "exists": true,
+     "released": "2025-05-22",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 469
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.7.8",
+     "exists": true,
+     "released": "2025-05-24",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 465
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.45.1",
+     "exists": true,
+     "released": "2025-05-24",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 422
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.8.4",
+     "exists": true,
+     "released": "2025-04-30",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 349
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.29.0",
+     "exists": true,
+     "released": "2024-10-21",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 606
+    },
+    {
+     "lib": "tauri",
+     "claimed": "2.5.1",
+     "exists": true,
+     "released": "2025-04-21",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 436
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "note": "subagent, recall prompt v2",
+   "prompt_version": 2,
+   "source": "anthropic-subagent"
+  },
+  "claude-haiku-4-5-20251001": {
+   "model": "claude-haiku-4-5-20251001",
+   "cutoff": "2023-10-07",
+   "method": "median release date of 20 verified answers",
+   "verified": 20,
+   "hallucinated": 0,
+   "unanswered": 0,
+   "per_library": {
+    "react": "2022-06-14",
+    "typescript": "2024-03-06",
+    "vite": "2023-11-16",
+    "vitest": "2023-12-04",
+    "hono": "2023-02-18",
+    "zod": "2023-08-14",
+    "tailwindcss": "2023-03-28",
+    "astro": "2023-12-05",
+    "bun": "2023-09-08",
+    "drizzle-orm": "2023-08-06",
+    "biome": "2023-08-28",
+    "fastapi": "2023-10-18",
+    "pydantic": "2023-09-25",
+    "polars": "2023-08-30",
+    "ruff": "2023-10-16",
+    "uv": "2024-02-15",
+    "tokio": "2023-12-08",
+    "axum": "2023-11-27",
+    "ratatui": "2024-02-02",
+    "tauri": "2023-09-28"
+   },
+   "probes": [
+    {
+     "lib": "react",
+     "claimed": "18.2.0",
+     "exists": true,
+     "released": "2022-06-14",
+     "newest_known": "19.2.8",
+     "newest_date": "2026-07-21",
+     "lag_days": 1498
+    },
+    {
+     "lib": "typescript",
+     "claimed": "5.4.0~5.4.2",
+     "exists": true,
+     "released": "2024-03-06",
+     "newest_known": "7.0.2",
+     "newest_date": "2026-07-08",
+     "lag_days": 854
+    },
+    {
+     "lib": "vite",
+     "claimed": "5.0.0",
+     "exists": true,
+     "released": "2023-11-16",
+     "newest_known": "8.2.2",
+     "newest_date": "2026-08-20",
+     "lag_days": 1008
+    },
+    {
+     "lib": "vitest",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-12-04",
+     "newest_known": "5.0.0",
+     "newest_date": "2026-09-03",
+     "lag_days": 1004
+    },
+    {
+     "lib": "hono",
+     "claimed": "3.0.0",
+     "exists": true,
+     "released": "2023-02-18",
+     "newest_known": "4.13.5",
+     "newest_date": "2026-08-26",
+     "lag_days": 1285
+    },
+    {
+     "lib": "zod",
+     "claimed": "3.22.0",
+     "exists": true,
+     "released": "2023-08-14",
+     "newest_known": "4.5.4",
+     "newest_date": "2026-08-29",
+     "lag_days": 1111
+    },
+    {
+     "lib": "tailwindcss",
+     "claimed": "3.3.0",
+     "exists": true,
+     "released": "2023-03-28",
+     "newest_known": "4.3.3",
+     "newest_date": "2026-07-16",
+     "lag_days": 1206
+    },
+    {
+     "lib": "astro",
+     "claimed": "4.0.0",
+     "exists": true,
+     "released": "2023-12-05",
+     "newest_known": "7.3.1",
+     "newest_date": "2026-09-03",
+     "lag_days": 1003
+    },
+    {
+     "lib": "bun",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-09-08",
+     "newest_known": "1.4.1",
+     "newest_date": "2026-09-04",
+     "lag_days": 1092
+    },
+    {
+     "lib": "drizzle-orm",
+     "claimed": "0.28.0",
+     "exists": true,
+     "released": "2023-08-06",
+     "newest_known": "0.45.2",
+     "newest_date": "2026-03-27",
+     "lag_days": 964
+    },
+    {
+     "lib": "biome",
+     "claimed": "1.0.0",
+     "exists": true,
+     "released": "2023-08-28",
+     "newest_known": "2.5.12",
+     "newest_date": "2026-09-03",
+     "lag_days": 1102
+    },
+    {
+     "lib": "fastapi",
+     "claimed": "0.104.0",
+     "exists": true,
+     "released": "2023-10-18",
+     "newest_known": "0.141.1",
+     "newest_date": "2026-07-29",
+     "lag_days": 1015
+    },
+    {
+     "lib": "pydantic",
+     "claimed": "2.4.0",
+     "exists": true,
+     "released": "2023-09-25",
+     "newest_known": "2.13.5",
+     "newest_date": "2026-08-28",
+     "lag_days": 1068
+    },
+    {
+     "lib": "polars",
+     "claimed": "0.19.0",
+     "exists": true,
+     "released": "2023-08-30",
+     "newest_known": "1.44.1",
+     "newest_date": "2026-08-26",
+     "lag_days": 1092
+    },
+    {
+     "lib": "ruff",
+     "claimed": "0.1.0",
+     "exists": true,
+     "released": "2023-10-16",
+     "newest_known": "0.16.6",
+     "newest_date": "2026-09-03",
+     "lag_days": 1053
+    },
+    {
+     "lib": "uv",
+     "claimed": "0.1.0",
+     "exists": true,
+     "released": "2024-02-15",
+     "newest_known": "0.12.9",
+     "newest_date": "2026-09-01",
+     "lag_days": 929
+    },
+    {
+     "lib": "tokio",
+     "claimed": "1.35.0",
+     "exists": true,
+     "released": "2023-12-08",
+     "newest_known": "1.53.1",
+     "newest_date": "2026-07-20",
+     "lag_days": 955
+    },
+    {
+     "lib": "axum",
+     "claimed": "0.7.0",
+     "exists": true,
+     "released": "2023-11-27",
+     "newest_known": "0.8.9",
+     "newest_date": "2026-04-14",
+     "lag_days": 869
+    },
+    {
+     "lib": "ratatui",
+     "claimed": "0.26.0",
+     "exists": true,
+     "released": "2024-02-02",
+     "newest_known": "0.30.2",
+     "newest_date": "2026-06-19",
+     "lag_days": 868
+    },
+    {
+     "lib": "tauri",
+     "claimed": "1.5.0",
+     "exists": true,
+     "released": "2023-09-28",
+     "newest_known": "2.11.5",
+     "newest_date": "2026-07-01",
+     "lag_days": 1007
+    }
+   ],
+   "probed_at": "2026-09-04",
+   "note": "subagent owl, strict prompt v1",
+   "prompt_version": 1,
+   "source": "anthropic-subagent"
+  }
+ },
+ "prompt_comparison": {
+  "minimax/minimax-m3:free": {
+   "v1_strict": "2024-03-08",
+   "v2_recall": "2024-11-27",
+   "v1_hall": 0,
+   "v2_hall": 0
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "v1_strict": "2024-07-31",
+   "v2_recall": "2024-05-06",
+   "v1_hall": 1,
+   "v2_hall": 0
+  },
+  "dots-studio/dots-3-note-preview:free": {
+   "v1_strict": "2024-05-30",
+   "v2_recall": "2024-09-09",
+   "v1_hall": 1,
+   "v2_hall": 1
+  },
+  "claude-fable-5-1@subagent": {
+   "v1_strict": "2024-05-02",
+   "v2_recall": "2025-05-16",
+   "v1_hall": 0,
+   "v2_hall": 0
+  }
+ }
+}

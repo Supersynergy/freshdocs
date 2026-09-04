@@ -154,6 +154,37 @@ class GapIntegrationTests(unittest.TestCase):
         _, matched, cutoff = self.core.model_cutoff("housemodel", "2020-05-05")
         self.assertEqual((matched, cutoff), ("explicit", "2020-05-05"))
 
+    def test_measured_cutoff_beats_manual_override_and_defaults(self):
+        self.core.set_model_cutoff("claude-sonnet-4", "2020-01-01")
+        self.core.record_measured_cutoff("claude-sonnet-4-5", "2025-06-11", {"hono": "2025-05-31"}, "test")
+        _, matched, cutoff = self.core.model_cutoff("anthropic/claude-sonnet-4-5-20260101")
+        self.assertEqual(matched, "measured:claude-sonnet-4-5")
+        self.assertEqual(cutoff, "2025-06-11")
+
+    def test_per_library_measured_date_overrides_the_model_wide_cutoff(self):
+        self.core.record_measured_cutoff(
+            "probed-model", "2025-06-11", {"ratatui": "2024-10-21", "polars": "2025-06-18"}, "test"
+        )
+        self.assertEqual(self.core.library_cutoff("probed-model", "ratatui", "2025-06-11"), ("2024-10-21", "measured"))
+        self.assertEqual(self.core.library_cutoff("probed-model", "polars", "2025-06-11"), ("2025-06-18", "measured"))
+        self.assertEqual(self.core.library_cutoff("probed-model", "tokio", "2025-06-11"), ("2025-06-11", "model"))
+
+    def test_a_version_the_model_named_correctly_is_covered_not_a_gap(self):
+        dates = {"0.29.0": "2024-10-21T00:00:00Z", "0.30.0": "2025-08-01T00:00:00Z"}
+        import freshdocs.gap as gap
+
+        approx = gap.classify("ratatui", "0.29.0", dates, "2024-10-21")
+        measured = gap.classify("ratatui", "0.29.0", dates, "2024-10-21", measured=True)
+        self.assertEqual(approx.status, gap.STATUS_AHEAD)
+        self.assertEqual(measured.status, gap.STATUS_COVERED)
+        newer = gap.classify("ratatui", "0.30.0", dates, "2024-10-21", measured=True)
+        self.assertEqual(newer.status, gap.STATUS_AHEAD)
+
+    def test_measured_record_survives_registry_rebuild(self):
+        self.core.record_measured_cutoff("m", "2025-01-01", {"hono": "2024-12-01"}, "test")
+        self.core.ensure_registry()
+        self.assertIn("m", self.core.measured_cutoffs())
+
     def test_model_comes_from_the_environment_when_not_passed(self):
         os.environ["FRESHDOCS_MODEL"] = "claude-sonnet-4-5"
         model, matched, _ = self.core.model_cutoff(None)
@@ -228,6 +259,45 @@ class GapIntegrationTests(unittest.TestCase):
                     "bearer auth", root, limit=6, sync_stale=True, model="m", cutoff="2025-01-01"
                 )
         self.assertEqual(sorted(synced), ["hono", "zod"])
+
+    def test_covered_library_is_rendered_as_a_pointer_and_gap_library_in_full(self):
+        root = self._two_lib_project("pointer")
+        for i in range(4):
+            self.core.index_docs("hono", "4.13.5", f"## Validator {i}\nvalidate the schema with the middleware. " * 20, "2026-09-04")
+            self.core.index_docs("zod", "4.5.4", f"## Schema {i}\nvalidate the schema with parse. " * 20, "2026-09-04")
+
+        def dates(meta, fetch):
+            if meta.get("pkg") == "hono":
+                return {"4.13.5": "2026-08-26T00:00:00Z"}  # after cutoff: gap
+            return {"4.5.4": "2024-01-01T00:00:00Z"}  # before cutoff: covered
+
+        with mock.patch.object(self.core, "release_dates", side_effect=dates):
+            pack = self.core.context_pack("validate schema", root, limit=6, model="m", cutoff="2025-01-01")
+        hono_blocks = [l for l in pack.splitlines() if l.startswith("[") and " hono " in l]
+        zod_blocks = [l for l in pack.splitlines() if l.startswith("[") and " zod " in l]
+        self.assertGreaterEqual(len(hono_blocks), 3, "the gap library must get most of the budget")
+        self.assertEqual(len(zod_blocks), 1, "a covered library gets exactly one confirming slot")
+        self.assertIn("pointer only", zod_blocks[0])
+        self.assertNotIn("pointer only", hono_blocks[0])
+        # the gap library's prose is present; the covered library's prose is not
+        self.assertIn("validate the schema with the middleware", pack)
+        self.assertNotIn("validate the schema with parse", pack)
+
+    def test_gap_library_is_listed_before_covered_library(self):
+        root = self._two_lib_project("order")
+        self.core.index_docs("hono", "4.13.5", "## H\nvalidate schema here.\n", "2026-09-04")
+        self.core.index_docs("zod", "4.5.4", "## Z\nvalidate schema here.\n", "2026-09-04")
+
+        def dates(meta, fetch):
+            # zod is the gap this time, hono is covered
+            if meta.get("pkg") == "zod":
+                return {"4.5.4": "2026-08-29T00:00:00Z"}
+            return {"4.13.5": "2024-01-01T00:00:00Z"}
+
+        with mock.patch.object(self.core, "release_dates", side_effect=dates):
+            pack = self.core.context_pack("validate schema", root, limit=4, model="m", cutoff="2025-01-01")
+        first = next(l for l in pack.splitlines() if l.startswith("[1]"))
+        self.assertIn(" zod ", first)
 
     def test_no_model_leaves_the_pack_untouched(self):
         root = pathlib.Path(self.tmp.name) / "plain"

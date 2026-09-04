@@ -50,11 +50,19 @@ An agent may claim a docs-grounded implementation only when:
 
 ## Gap Rule
 
-Pass your own model id so Freshdocs loads only what your training cannot cover:
+Measure your own cutoff once per model, then pass your model id on every call:
 
 ```sh
+freshdocs models --probe                       # answer the question from memory, honestly
+freshdocs models --record "$YOUR_MODEL_ID" '<your JSON answer>'
 freshdocs context "$USER_TASK" --project . --model "$YOUR_MODEL_ID" --sync-stale
 ```
+
+Answer the probe with your best recollection. Do not deflate it to seem safe: an
+answer that is a year too conservative costs every later prompt documentation you did
+not need, while an invented version is caught by the registry check and simply does not
+count. If your model id is unknown and you skip the probe, every library is loaded in
+full, which is safe but not cheap.
 
 The pack then states a verdict per library. Read it as an instruction:
 

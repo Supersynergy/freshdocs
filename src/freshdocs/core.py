@@ -45,6 +45,13 @@ USER_AGENT = f"freshdocs/{__version__}"
 # so real prose always wins.
 NAV_LINK_RATIO = 0.5
 NAV_PENALTY = 12.0
+# History files describe what changed between releases, not how to use the API now.
+# They are still indexed, because "what broke in v2" is a real question, but for an
+# ordinary usage question they must rank below any guide page that also matches.
+HISTORY_PENALTY = 4.0
+HISTORY_SOURCE_PATTERN = "%CHANGELOG%"
+MIGRATION_SOURCE_PATTERN = "%MIGRATION%"
+HISTORY_QUERY_TERMS = frozenset({"changelog", "migration", "migrate", "upgrade", "breaking", "deprecated", "release", "changed"})
 LLMS_MAX_PAGES = 14
 LLMS_MIN_PAGE_CHARS = 300
 # A real documentation site has far more than a dozen pages; MAX_DOC_CHARS is the
@@ -778,7 +785,14 @@ def fts_query_plan(query: str) -> list[str]:
     terms = query_terms(query)
     if len(terms) < 2:
         return [fts_query(query)]
-    return [fts_query(query, "AND"), fts_query(query, "OR")]
+    plan = [fts_query(query, "AND")]
+    # Between all-terms and any-term sits the useful middle: every pair of terms. A
+    # chunk mentioning two of three words is about the question; one word is noise.
+    if len(terms) >= 3:
+        pairs = [f"({a} AND {b})" for i, a in enumerate(terms) for b in terms[i + 1 :]]
+        plan.append(" OR ".join(pairs))
+    plan.append(fts_query(query, "OR"))
+    return plan
 
 
 def search(
@@ -810,22 +824,41 @@ def search(
         else:
             scope = ""
 
+        # A question about upgrading wants the history files; any other question does
+        # not, so the penalty switches off when the query itself is about change.
+        asks_history = bool(set(t.lower() for t in query_terms(query)) & HISTORY_QUERY_TERMS)
+        history_penalty = 0.0 if asks_history else HISTORY_PENALTY
         sql = f"""
             SELECT docs.lib, docs.version, docs.checked, docs.title, docs.source, docs.text,
-                   bm25(docs_fts) + (docs.nav * ?) AS rank
+                   bm25(docs_fts) + (docs.nav * ?)
+                   + CASE WHEN upper(docs.source) LIKE ? OR upper(docs.source) LIKE ? THEN ? ELSE 0 END AS rank
             FROM docs_fts JOIN docs ON docs_fts.rowid = docs.id
             WHERE docs_fts MATCH ?{scope}
             ORDER BY rank
             LIMIT ?
         """
+        # Walk the plan from precise to loose and top up, never restart: a precise
+        # tier keeps its rank above anything a looser tier adds.
         rows: list[Any] = []
+        seen: set[tuple[str, str, str, str]] = set()
         for terms in fts_query_plan(query):
+            if len(rows) >= limit:
+                break
             try:
-                rows = con.execute(sql, [NAV_PENALTY, terms, limit]).fetchall()
+                tier = con.execute(
+                    sql,
+                    [NAV_PENALTY, HISTORY_SOURCE_PATTERN, MIGRATION_SOURCE_PATTERN, history_penalty, terms, limit],
+                ).fetchall()
             except sqlite3.OperationalError:
                 continue
-            if rows:
-                break
+            for row in tier:
+                key = (row[0], row[1], row[3], row[4])
+                if key in seen:
+                    continue
+                seen.add(key)
+                rows.append(row)
+                if len(rows) >= limit:
+                    break
     finally:
         con.close()
     return [
@@ -850,6 +883,51 @@ def detect_project_libs(root: pathlib.Path) -> list[str]:
 
 def project_analysis(root: pathlib.Path) -> dict[str, Any]:
     return analyze_project(root, ensure_registry()["libs"])
+
+
+def _budgeted_search(
+    query: str,
+    limit: int,
+    versions: dict[str, str],
+    verdicts: list[GapVerdict],
+) -> list[dict[str, Any]]:
+    """Search per library with a budget that follows the gap verdicts.
+
+    A single ranked query lets whichever library scores best on the words take every
+    slot. With verdicts available, each library the model cannot cover is queried on
+    its own and guaranteed a share; a covered library gets one slot as confirmation.
+    Without verdicts, this is the plain ranked search.
+    """
+    if not versions:
+        return []
+    by_lib = {v.lib: v for v in verdicts if v.lib in versions}
+    if not by_lib or len(versions) == 1:
+        return search(query, limit=limit, versions=versions)
+
+    gaps = [lib for lib in versions if by_lib.get(lib) is None or by_lib[lib].needs_full_context]
+    covered = [lib for lib in versions if lib not in gaps]
+    quotas: dict[str, int] = {}
+    if gaps:
+        for lib in covered:
+            quotas[lib] = 1
+        remaining = max(len(gaps), limit - len(covered))
+        base, extra = divmod(remaining, len(gaps))
+        for i, lib in enumerate(gaps):
+            quotas[lib] = base + (1 if i < extra else 0)
+    else:
+        base, extra = divmod(max(limit, len(covered)), len(covered))
+        for i, lib in enumerate(covered):
+            quotas[lib] = base + (1 if i < extra else 0)
+
+    hits: list[dict[str, Any]] = []
+    for lib, quota in quotas.items():
+        if quota <= 0:
+            continue
+        hits.extend(search(query, limit=quota, versions={lib: versions[lib]}))
+    # Gaps first: the reader sees what it cannot know before what it can confirm.
+    order = {lib: i for i, lib in enumerate(gaps + covered)}
+    hits.sort(key=lambda h: order.get(h["lib"], len(order)))
+    return hits
 
 
 def pin_label(source_ref: str | None, exact_ref: bool) -> str:
@@ -954,13 +1032,15 @@ def context_pack(
         if current := state.get(lib, {}).get("version"):
             effective_versions.setdefault(lib, current)
 
-    # A version the model was trained on needs a confirmation, not a tutorial.
+    # Spend the budget where the model is weakest. Covered libraries get one confirming
+    # slot; the rest is split across the gaps so a loud library cannot crowd out the one
+    # the model has never seen.
     effective_limit = limit
     if verdicts and not any(v.needs_full_context for v in verdicts):
         effective_limit = max(1, limit // 3)
         gap_notes.append("  budget: reduced, every library predates this model's training cutoff")
 
-    hits = search(query, limit=effective_limit, versions=effective_versions) if effective_versions else []
+    hits = _budgeted_search(query, effective_limit, effective_versions, verdicts)
     language_names = [item["language"] for item in analysis["languages"][:6]]
     rendered_libs = []
     for lib in selected:
@@ -986,24 +1066,24 @@ def context_pack(
         *gap_notes,
         "",
     ]
+    covered_libs = {v.lib for v in verdicts if not v.needs_full_context}
     for i, hit in enumerate(hits, 1):
-        excerpt = re.sub(r"\n{3,}", "\n\n", hit["text"].strip())
-        if len(excerpt) > 1400:
-            excerpt = excerpt[:1400].rstrip() + "\n..."
         version_state = state_for_version(state, hit["lib"], hit["version"])
         source_state = next(
             (source for source in version_state.get("sources", []) if source.get("url") == hit["source"]),
             {},
         )
         pin = pin_label(source_state.get("ref"), bool(version_state.get("exact_ref")))
-        lines.extend(
-            [
-                f"[{i}] {hit['lib']} {hit['version']} fetched {hit['checked']} {pin} - {hit['title']}",
-                f"source: {hit['source']}",
-                excerpt,
-                "",
-            ]
-        )
+        header = f"[{i}] {hit['lib']} {hit['version']} fetched {hit['checked']} {pin} - {hit['title']}"
+        if hit["lib"] in covered_libs:
+            # The model knows this release. A pointer confirms the API is where it
+            # remembers; the prose would only repeat what it was trained on.
+            lines.extend([header + " (covered: pointer only)", f"source: {hit['source']}", ""])
+            continue
+        excerpt = re.sub(r"\n{3,}", "\n\n", hit["text"].strip())
+        if len(excerpt) > 1400:
+            excerpt = excerpt[:1400].rstrip() + "\n..."
+        lines.extend([header, f"source: {hit['source']}", excerpt, ""])
     if not hits:
         lines.extend(_miss_advice(query, root, selected, selected_versions, auto_selected))
     return "\n".join(lines).rstrip() + "\n"
@@ -1119,15 +1199,75 @@ def active_model(model: str | None = None) -> str | None:
     return model or os.environ.get("FRESHDOCS_MODEL") or None
 
 
+MEASURED_KEY = "models_measured"
+
+
+def measured_cutoffs() -> dict[str, dict[str, Any]]:
+    """Cutoffs established by probing a model, keyed by model id.
+
+    Each record carries the overall cutoff plus per-library dates, because a model's
+    coverage is uneven: it may know polars to last month and ruff only to last year.
+    """
+    data = ensure_registry().get(MEASURED_KEY)
+    return {str(k): v for k, v in data.items() if isinstance(v, dict)} if isinstance(data, dict) else {}
+
+
+def record_measured_cutoff(model: str, cutoff: str, per_library: dict[str, str], source: str) -> None:
+    reg = ensure_registry()
+    table = reg.get(MEASURED_KEY)
+    reg[MEASURED_KEY] = {**table} if isinstance(table, dict) else {}
+    reg[MEASURED_KEY][model] = {
+        "cutoff": cutoff,
+        "per_library": dict(sorted(per_library.items())),
+        "source": source,
+        "recorded": today(),
+    }
+    write_json(REGISTRY_PATH, reg)
+
+
+def _match_measured(model: str | None) -> tuple[str | None, dict[str, Any] | None]:
+    if not model:
+        return None, None
+    needle = re.sub(r"[^a-z0-9.-]+", "-", model.lower())
+    best: tuple[str, dict[str, Any]] | None = None
+    for key, rec in measured_cutoffs().items():
+        k = re.sub(r"[^a-z0-9.-]+", "-", key.lower())
+        if k in needle and (best is None or len(k) > len(best[0])):
+            best = (key, rec)
+    return best if best else (None, None)
+
+
 def model_cutoff(model: str | None, cutoff: str | None = None) -> tuple[str | None, str | None, str | None]:
-    """Return (model, matched key, cutoff date), honouring explicit and registry overrides."""
+    """Return (model, matched key, cutoff date).
+
+    Precedence: an explicit --cutoff, then a measured probe, then a manual override,
+    then the shipped approximate table. Measured beats manual because it is evidence
+    about this model rather than a number copied from a vendor page.
+    """
     resolved = active_model(model)
     if cutoff:
         return resolved, "explicit", cutoff
+    key, rec = _match_measured(resolved)
+    if rec and rec.get("cutoff"):
+        return resolved, f"measured:{key}", str(rec["cutoff"])
     overrides = ensure_registry().get("models")
     overrides = {str(k): str(v) for k, v in overrides.items()} if isinstance(overrides, dict) else {}
     key, value = resolve_cutoff(resolved, overrides)
     return resolved, key, value
+
+
+def library_cutoff(model: str | None, lib: str, fallback: str | None) -> tuple[str | None, str]:
+    """Per-library cutoff when a probe measured it, else the model-wide value.
+
+    The per-library date is the newest release the model named correctly, so it is
+    the tightest honest bound: anything newer for that library is a gap by evidence.
+    """
+    _, rec = _match_measured(active_model(model))
+    if rec:
+        per = rec.get("per_library")
+        if isinstance(per, dict) and per.get(lib):
+            return str(per[lib]), "measured"
+    return fallback, "model"
 
 
 def set_model_cutoff(model: str, cutoff: str) -> None:
@@ -1152,8 +1292,12 @@ def gap_verdicts(
         if not isinstance(meta, dict):
             verdicts.append(GapVerdict(lib, version, "unknown", "library is not registered"))
             continue
-        dates = cached_release_dates(lib, meta) if resolved_cutoff else {}
-        verdicts.append(classify(lib, version, dates, resolved_cutoff))
+        # An explicit --cutoff is the caller's word and applies uniformly.
+        lib_cutoff, origin = resolved_cutoff, "model"
+        if not cutoff:
+            lib_cutoff, origin = library_cutoff(model, lib, resolved_cutoff)
+        dates = cached_release_dates(lib, meta) if lib_cutoff else {}
+        verdicts.append(classify(lib, version, dates, lib_cutoff, measured=(origin == "measured")))
     return verdicts
 
 
