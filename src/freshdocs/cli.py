@@ -60,6 +60,13 @@ def build_parser() -> argparse.ArgumentParser:
     sync.add_argument("--force", action="store_true", help="re-index even when version is unchanged")
     sync.add_argument("--project", help="detect libraries and exact versions from this project")
     sync.add_argument("--version", help="exact version; requires one --lib")
+    sync.add_argument("--latest", action="store_true", help="sync the latest upstream version for each library, not the project-pinned one")
+    sync.add_argument(
+        "--jobs",
+        type=int,
+        default=4,
+        help="parallel sync workers (default 4); use 1 for sequential",
+    )
 
     st = sub.add_parser("status", help="show registry and freshness state")
     st.add_argument("--json", action="store_true")
@@ -319,12 +326,55 @@ def cmd_sync(args: argparse.Namespace) -> int:
         if args.version and len(libs) != 1:
             print("--version requires exactly one --lib", file=sys.stderr)
             return 2
-        targets = [(lib, args.version or versions.get(lib)) for lib in libs]
+        # --latest: fetch the upstream latest version, not the project-pinned one
+        if getattr(args, "latest", False):
+            from .core import github_latest, latest_version
+
+            targets = []
+            for lib in libs:
+                meta = reg.get(lib, {})
+                upstream = latest_version(meta) or github_latest(meta.get("gh", ""))
+                targets.append((lib, upstream or None))
+        else:
+            targets = [(lib, args.version or versions.get(lib)) for lib in libs]
 
     failed = 0
-    for lib, target in targets:
-        try:
-            result = sync_library(lib, force=args.force or args.outdated, version=target)
+    jobs = max(1, getattr(args, "jobs", 4))
+    if jobs == 1 or len(targets) <= 1:
+        # Sequential path: preserves exact output ordering for single-lib or --jobs 1
+        for lib, target in targets:
+            try:
+                result = sync_library(lib, force=args.force or args.outdated, version=target)
+                pin = "exact-ref" if result.get("exact_ref") else "branch-fallback"
+                print(
+                    f"{result['lib']:18} {result['version']:14} {result['status']} "
+                    f"inserted={result['inserted']} fetched={result['checked']} {pin}"
+                )
+                for warning in result.get("warnings", []):
+                    print(f"  warning: {warning}", file=sys.stderr)
+                if result["status"] == "failed":
+                    failed += 1
+            except Exception as e:
+                failed += 1
+                print(f"{lib}: FAIL {e}", file=sys.stderr)
+    else:
+        # Parallel path: ThreadPoolExecutor for network-bound sync
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        results: list[tuple[int, dict[str, Any]]] = []
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {
+                pool.submit(sync_library, lib, force=args.force or args.outdated, version=target): i
+                for i, (lib, target) in enumerate(targets)
+            }
+            for future in as_completed(futures):
+                idx = futures[future]
+                try:
+                    results.append((idx, future.result()))
+                except Exception as e:
+                    results.append((idx, {"lib": targets[idx][0], "version": targets[idx][1] or "?", "status": "failed", "inserted": 0, "checked": "-", "warnings": [str(e)]}))
+                    failed += 1
+        for idx, result in sorted(results, key=lambda r: r[0]):
             pin = "exact-ref" if result.get("exact_ref") else "branch-fallback"
             print(
                 f"{result['lib']:18} {result['version']:14} {result['status']} "
@@ -332,11 +382,6 @@ def cmd_sync(args: argparse.Namespace) -> int:
             )
             for warning in result.get("warnings", []):
                 print(f"  warning: {warning}", file=sys.stderr)
-            if result["status"] == "failed":
-                failed += 1
-        except Exception as e:
-            failed += 1
-            print(f"{lib}: FAIL {e}", file=sys.stderr)
     return 1 if failed else 0
 
 

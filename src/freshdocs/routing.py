@@ -18,6 +18,16 @@ CODE_ACTION = re.compile(
     re.IGNORECASE,
 )
 
+# Autosync: spawn a background sync for stale libraries so the next prompt finds
+# a fresh cache without blocking the current one. The process is detached so it
+# survives the hook's short lifetime and never delays the response.
+AUTOSYNC_TRIGGER = re.compile(
+    r"\b(?:api|sdk|framework|library|package|dependency|version|migration|"
+    r"deprecated|deprecation|breaking|changelog|docs|documentation|"
+    r"aktuell|neueste|bibliothek|paket|abhängigkeit|upgrade|update)\b",
+    re.IGNORECASE,
+)
+
 
 def needs_fresh_context(prompt: str, analysis: dict) -> bool:
     if not prompt.strip() or len(prompt) > 12_000 or not analysis.get("libraries"):
@@ -63,6 +73,47 @@ def cached_project_analysis(root: pathlib.Path, max_age_seconds: int = 300) -> d
     return analysis
 
 
+def _spawn_autosync(analysis: dict, root: pathlib.Path) -> None:
+    """Spawn a detached background sync for stale libraries.
+
+    The hook must return in under a few seconds, so we never block on network.
+    Instead we fork a `freshdocs sync --project` process that refreshes stale
+    entries in parallel. The next prompt finds a fresh cache.
+    """
+    libs = [item.get("lib") for item in analysis.get("libraries", []) if item.get("lib")]
+    if not libs:
+        return
+    # Only spawn if at least one library is stale or missing
+    state = core.load_json(core.STATE_PATH, {})
+    reg = core.ensure_registry()["libs"]
+    needs_sync = False
+    for lib in libs:
+        meta = reg.get(lib, {})
+        version = state.get(lib, {}).get("version", "")
+        if not version or core.is_stale(state, lib, version, meta) or not core.has_indexed_docs(lib, version):
+            needs_sync = True
+            break
+    if not needs_sync:
+        return
+    import os
+    import sys
+
+    try:
+        # Detach: setsid + nohup so the child survives the hook's exit
+        import subprocess
+
+        subprocess.Popen(
+            [sys.executable, "-m", "freshdocs", "sync", "--project", str(root), "--jobs", "4"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            close_fds=True,
+            start_new_session=True,
+        )
+    except OSError:
+        pass
+
+
 def routed_context(
     prompt: str,
     root: pathlib.Path,
@@ -75,6 +126,9 @@ def routed_context(
     analysis = cached_project_analysis(root)
     if not needs_fresh_context(prompt, analysis):
         return ""
+    # Autosync: spawn background refresh for stale libraries (non-blocking)
+    if AUTOSYNC_TRIGGER.search(prompt):
+        _spawn_autosync(analysis, root)
     # Hook payloads commonly expose model/model_id/modelId. Let core validate and
     # resolve those aliases so the user never has to duplicate the model on a CLI flag.
     context = core.context_pack(
