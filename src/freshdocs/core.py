@@ -325,18 +325,25 @@ def version_ref_candidates(name: str, meta: dict[str, Any], version: str) -> lis
 def _fetch_repo_sources(repo: str, prefixes: list[str], ref: str) -> list[DocSource]:
     sources: list[DocSource] = []
     encoded_ref = urllib.parse.quote(ref, safe="")
-    for filename in ("README.md", "CHANGELOG.md"):
+    # Try .md first, then .rst, then .txt — many Python/Sphinx projects use .rst
+    readme_candidates = ("README.md", "README.rst", "README.txt", "readme.md")
+    changelog_candidates = ("CHANGELOG.md", "CHANGES.md", "CHANGES.rst", "CHANGELOG.rst", "HISTORY.rst")
+    for candidates, is_changelog in ((readme_candidates, False), (changelog_candidates, True)):
         for prefix in prefixes:
-            url = f"https://raw.githubusercontent.com/{repo}/{encoded_ref}/{prefix}{filename}"
-            try:
-                text = fetch_url(url)
-            except Exception:
+            for filename in candidates:
+                url = f"https://raw.githubusercontent.com/{repo}/{encoded_ref}/{prefix}{filename}"
+                try:
+                    text = fetch_url(url)
+                except Exception:
+                    continue
+                if len(text.strip()) < 200:
+                    continue
+                if is_changelog and len(text) > 14_000:
+                    text = text[:14_000] + "\n...(older entries trimmed)"
+                sources.append(DocSource(prefix + filename, url, ref, text[:MAX_DOC_CHARS]))
+                break
+            else:
                 continue
-            if len(text.strip()) < 200:
-                continue
-            if filename == "CHANGELOG.md" and len(text) > 14_000:
-                text = text[:14_000] + "\n...(older entries trimmed)"
-            sources.append(DocSource(prefix + filename, url, ref, text[:MAX_DOC_CHARS]))
             break
     return sources
 
