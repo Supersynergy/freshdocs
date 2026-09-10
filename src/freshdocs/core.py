@@ -729,7 +729,10 @@ def sync_library(name: str, force: bool = False, version: str | None = None) -> 
     state = load_json(STATE_PATH, {})
     checked = today()
     meta = reg[name]
-    target_version = version or latest_version(meta)
+    try:
+        target_version = version or latest_version(meta)
+    except Exception:
+        target_version = "?"
     if target_version == "?":
         return {"lib": name, "version": target_version, "checked": checked, "inserted": 0, "status": "failed"}
     if not force and not is_stale(state, name, target_version, meta) and has_indexed_docs(name, target_version):

@@ -333,7 +333,10 @@ def cmd_sync(args: argparse.Namespace) -> int:
             targets = []
             for lib in libs:
                 meta = reg.get(lib, {})
-                upstream = latest_version(meta) or github_latest(meta.get("gh", ""))
+                try:
+                    upstream = latest_version(meta) or github_latest(meta.get("gh", ""))
+                except Exception:
+                    upstream = None
                 targets.append((lib, upstream or None))
         else:
             targets = [(lib, args.version or versions.get(lib)) for lib in libs]
