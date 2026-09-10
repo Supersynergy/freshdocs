@@ -1,165 +1,1017 @@
 {
   "libs": {
-    "typescript": { "gh": "microsoft/TypeScript", "branch": "main", "eco": "npm", "pkg": "typescript" },
-    "react": { "gh": "facebook/react", "branch": "main", "eco": "npm", "pkg": "react" },
-    "bun": { "gh": "oven-sh/bun", "branch": "main", "eco": "npm", "pkg": "bun", "llms": "https://bun.sh/llms.txt" },
-    "hono": { "gh": "honojs/hono", "branch": "main", "eco": "npm", "pkg": "hono", "docs_gh": "honojs/website", "docs_branch": "main" },
-    "tailwindcss": { "gh": "tailwindlabs/tailwindcss", "branch": "main", "eco": "npm", "pkg": "tailwindcss", "docs_gh": "tailwindlabs/tailwindcss.com", "docs_branch": "main" },
-    "zod": { "gh": "colinhacks/zod", "branch": "main", "eco": "npm", "pkg": "zod", "path": "packages/zod" },
-    "vite": { "gh": "vitejs/vite", "branch": "main", "eco": "npm", "pkg": "vite", "path": "packages/vite" },
-    "vitest": { "gh": "vitest-dev/vitest", "branch": "main", "eco": "npm", "pkg": "vitest" },
-    "tanstack-query": { "gh": "TanStack/query", "branch": "main", "eco": "npm", "pkg": "@tanstack/react-query" },
-    "drizzle-orm": { "gh": "drizzle-team/drizzle-orm", "branch": "main", "eco": "npm", "pkg": "drizzle-orm", "llms": "https://orm.drizzle.team/llms.txt", "docs_gh": "drizzle-team/drizzle-orm-docs", "docs_branch": "main" },
-    "astro": { "gh": "withastro/astro", "branch": "main", "eco": "npm", "pkg": "astro", "path": "packages/astro", "docs_gh": "withastro/docs", "docs_branch": "main" },
-    "ai-sdk": { "gh": "vercel/ai", "branch": "main", "eco": "npm", "pkg": "ai", "path": "packages/ai" },
-    "biome": { "gh": "biomejs/biome", "branch": "main", "eco": "npm", "pkg": "@biomejs/biome", "path": "packages/@biomejs/biome", "docs_gh": "biomejs/website", "docs_branch": "main" },
-    "next": { "gh": "vercel/next.js", "branch": "canary", "eco": "npm", "pkg": "next", "docs_gh": "vercel/next.js", "docs_branch": "docs" },
-    "nuxt": { "gh": "nuxt/nuxt", "branch": "main", "eco": "npm", "pkg": "nuxt", "docs_gh": "nuxt/nuxt", "docs_branch": "docs" },
-    "svelte": { "gh": "sveltejs/svelte", "branch": "main", "eco": "npm", "pkg": "svelte", "path": "packages/svelte" },
-    "solid": { "gh": "solidjs/solid", "branch": "main", "eco": "npm", "pkg": "solid-js" },
-    "qwik": { "gh": "QwikDev/qwik", "branch": "main", "eco": "npm", "pkg": "@builder.io/qwik" },
-    "remix": { "gh": "remix-run/react-router", "branch": "main", "eco": "npm", "pkg": "@remix-run/react", "docs_gh": "remix-run/react-router", "docs_branch": "docs" },
-    "trpc": { "gh": "trpc/trpc", "branch": "main", "eco": "npm", "pkg": "@trpc/server", "path": "packages/server" },
-    "prisma": { "gh": "prisma/prisma", "branch": "main", "eco": "npm", "pkg": "prisma", "docs_gh": "prisma/docs", "docs_branch": "main" },
-    "playwright": { "gh": "microsoft/playwright", "branch": "main", "eco": "npm", "pkg": "playwright" },
-    "radix-ui": { "gh": "radix-ui/primitives", "branch": "main", "eco": "npm", "pkg": "@radix-ui/react-dialog" },
-    "valibot": { "gh": "fabian-hiller/valibot", "branch": "main", "eco": "npm", "pkg": "valibot" },
-    "effect": { "gh": "Effect-TS/effect", "branch": "main", "eco": "npm", "pkg": "effect" },
-    "elysia": { "gh": "elysiajs/elysia", "branch": "main", "eco": "npm", "pkg": "elysia" },
-    "fastify": { "gh": "fastify/fastify", "branch": "main", "eco": "npm", "pkg": "fastify" },
-    "express": { "gh": "expressjs/express", "branch": "master", "eco": "npm", "pkg": "express" },
-    "nestjs": { "gh": "nestjs/nest", "branch": "master", "eco": "npm", "pkg": "@nestjs/core", "docs_gh": "nestjs/docs.nestjs.com", "docs_branch": "master" },
-    "rxjs": { "gh": "ReactiveX/rxjs", "branch": "master", "eco": "npm", "pkg": "rxjs" },
-    "date-fns": { "gh": "date-fns/date-fns", "branch": "main", "eco": "npm", "pkg": "date-fns" },
-    "zustand": { "gh": "pmndrs/zustand", "branch": "main", "eco": "npm", "pkg": "zustand" },
-    "jotai": { "gh": "pmndrs/jotai", "branch": "main", "eco": "npm", "pkg": "jotai" },
-    "tanstack-router": { "gh": "TanStack/router", "branch": "main", "eco": "npm", "pkg": "@tanstack/react-router" },
-    "tanstack-table": { "gh": "TanStack/table", "branch": "main", "eco": "npm", "pkg": "@tanstack/react-table" },
-    "tanstack-form": { "gh": "TanStack/form", "branch": "main", "eco": "npm", "pkg": "@tanstack/react-form" },
-    "tokio": { "gh": "tokio-rs/tokio", "branch": "master", "eco": "cargo", "pkg": "tokio", "path": "tokio" },
-    "axum": { "gh": "tokio-rs/axum", "branch": "main", "eco": "cargo", "pkg": "axum", "path": "axum" },
-    "ratatui": { "gh": "ratatui/ratatui", "branch": "main", "eco": "cargo", "pkg": "ratatui" },
-    "crossterm": { "gh": "crossterm-rs/crossterm", "branch": "main", "eco": "cargo", "pkg": "crossterm" },
-    "rusqlite": { "gh": "rusqlite/rusqlite", "branch": "main", "eco": "cargo", "pkg": "rusqlite" },
-    "tauri": { "gh": "tauri-apps/tauri", "branch": "main", "eco": "cargo", "pkg": "tauri" },
-    "serde": { "gh": "serde-rs/serde", "branch": "master", "eco": "cargo", "pkg": "serde" },
-    "serde-json": { "gh": "serde-rs/json", "branch": "master", "eco": "cargo", "pkg": "serde_json" },
-    "clap": { "gh": "clap-rs/clap", "branch": "master", "eco": "cargo", "pkg": "clap" },
-    "reqwest": { "gh": "seanmonstar/reqwest", "branch": "master", "eco": "cargo", "pkg": "reqwest" },
-    "sqlx": { "gh": "launchbadge/sqlx", "branch": "master", "eco": "cargo", "pkg": "sqlx" },
-    "sea-orm": { "gh": "SeaQL/sea-orm", "branch": "master", "eco": "cargo", "pkg": "sea-orm" },
-    "actix-web": { "gh": "actix/actix-web", "branch": "master", "eco": "cargo", "pkg": "actix-web" },
-    "rocket": { "gh": "rwf2/Rocket", "branch": "master", "eco": "cargo", "pkg": "rocket" },
-    "poem": { "gh": "poem-web/poem", "branch": "master", "eco": "cargo", "pkg": "poem" },
-    "tracing": { "gh": "tokio-rs/tracing", "branch": "master", "eco": "cargo", "pkg": "tracing", "path": "tracing" },
-    "anyhow": { "gh": "dtolnay/anyhow", "branch": "master", "eco": "cargo", "pkg": "anyhow" },
-    "thiserror": { "gh": "dtolnay/thiserror", "branch": "master", "eco": "cargo", "pkg": "thiserror" },
-    "rayon": { "gh": "rayon-rs/rayon", "branch": "master", "eco": "cargo", "pkg": "rayon" },
-    "bevy": { "gh": "bevyengine/bevy", "branch": "main", "eco": "cargo", "pkg": "bevy" },
-    "egui": { "gh": "emilk/egui", "branch": "master", "eco": "cargo", "pkg": "egui" },
-    "uv": { "gh": "astral-sh/uv", "branch": "main", "eco": "pypi", "pkg": "uv" },
-    "ruff": { "gh": "astral-sh/ruff", "branch": "main", "eco": "pypi", "pkg": "ruff" },
-    "fastapi": { "gh": "fastapi/fastapi", "branch": "master", "eco": "pypi", "pkg": "fastapi" },
-    "pydantic": { "gh": "pydantic/pydantic", "branch": "main", "eco": "pypi", "pkg": "pydantic" },
-    "polars": { "gh": "pola-rs/polars", "branch": "main", "eco": "pypi", "pkg": "polars" },
-    "django": { "gh": "django/django", "branch": "main", "eco": "pypi", "pkg": "django", "docs_gh": "django/djangoproject.com", "docs_branch": "main" },
-    "flask": { "gh": "pallets/flask", "branch": "main", "eco": "pypi", "pkg": "flask" },
-    "sqlalchemy": { "gh": "sqlalchemy/sqlalchemy", "branch": "main", "eco": "pypi", "pkg": "sqlalchemy" },
-    "httpx": { "gh": "encode/httpx", "branch": "master", "eco": "pypi", "pkg": "httpx" },
-    "celery": { "gh": "celery/celery", "branch": "main", "eco": "pypi", "pkg": "celery" },
-    "scrapy": { "gh": "scrapy/scrapy", "branch": "master", "eco": "pypi", "pkg": "scrapy" },
-    "pytest": { "gh": "pytest-dev/pytest", "branch": "main", "eco": "pypi", "pkg": "pytest" },
-    "langchain": { "gh": "langchain-ai/langchain", "branch": "master", "eco": "pypi", "pkg": "langchain", "path": "libs/langchain/langchain" },
-    "transformers": { "gh": "huggingface/transformers", "branch": "main", "eco": "pypi", "pkg": "transformers" },
-    "torch": { "gh": "pytorch/pytorch", "branch": "main", "eco": "pypi", "pkg": "torch" },
-    "pandas": { "gh": "pandas-dev/pandas", "branch": "main", "eco": "pypi", "pkg": "pandas" },
-    "numpy": { "gh": "numpy/numpy", "branch": "main", "eco": "pypi", "pkg": "numpy" },
-    "scikit-learn": { "gh": "scikit-learn/scikit-learn", "branch": "main", "eco": "pypi", "pkg": "scikit-learn" },
-    "gin": { "gh": "gin-gonic/gin", "branch": "master", "eco": "go", "pkg": "github.com/gin-gonic/gin" },
-    "echo": { "gh": "labstack/echo", "branch": "master", "eco": "go", "pkg": "github.com/labstack/echo/v4" },
-    "fiber": { "gh": "gofiber/fiber", "branch": "master", "eco": "go", "pkg": "github.com/gofiber/fiber/v2" },
-    "chi": { "gh": "go-chi/chi", "branch": "master", "eco": "go", "pkg": "github.com/go-chi/chi/v5" },
-    "gorm": { "gh": "go-gorm/gorm", "branch": "master", "eco": "go", "pkg": "gorm.io/gorm" },
-    "cobra": { "gh": "spf13/cobra", "branch": "master", "eco": "go", "pkg": "github.com/spf13/cobra" },
-    "viper": { "gh": "spf13/viper", "branch": "master", "eco": "go", "pkg": "github.com/spf13/viper" },
-    "go-zero": { "gh": "zeromicro/go-zero", "branch": "master", "eco": "go", "pkg": "github.com/zeromicro/go-zero" },
-    "ent": { "gh": "ent/ent", "branch": "master", "eco": "go", "pkg": "entgo.io/ent" },
-    "bubbletea": { "gh": "charmbracelet/bubbletea", "branch": "main", "eco": "go", "pkg": "github.com/charmbracelet/bubbletea" },
-    "spring-boot": { "gh": "spring-projects/spring-boot", "branch": "main", "eco": "maven", "pkg": "org.springframework.boot:spring-boot", "docs_gh": "spring-projects/spring-boot", "docs_branch": "main" },
-    "spring-framework": { "gh": "spring-projects/spring-framework", "branch": "main", "eco": "maven", "pkg": "org.springframework:spring-core" },
-    "junit": { "gh": "junit-team/junit5", "branch": "main", "eco": "maven", "pkg": "org.junit.jupiter:junit-jupiter" },
-    "mockito": { "gh": "mockito/mockito", "branch": "main", "eco": "maven", "pkg": "org.mockito:mockito-core" },
-    "jackson": { "gh": "FasterXML/jackson", "branch": "master", "eco": "maven", "pkg": "com.fasterxml.jackson.core:jackson-databind", "path": "jackson-databind" },
-    "guava": { "gh": "google/guava", "branch": "master", "eco": "maven", "pkg": "com.google.guava:guava" },
-    "lombok": { "gh": "projectlombok/lombok", "branch": "master", "eco": "maven", "pkg": "org.projectlombok:lombok" },
-    "slf4j": { "gh": "qos-ch/slf4j", "branch": "main", "eco": "maven", "pkg": "org.slf4j:slf4j-api" },
-    "ktor": { "gh": "ktorio/ktor", "branch": "main", "eco": "maven", "pkg": "io.ktor:ktor-server-core" },
-    "kotlinx-coroutines": { "gh": "Kotlin/kotlinx.coroutines", "branch": "master", "eco": "maven", "pkg": "org.jetbrains.kotlinx:kotlinx-coroutines-core" },
-    "compose-multiplatform": { "gh": "JetBrains/compose-multiplatform", "branch": "master", "eco": "maven", "pkg": "org.jetbrains.compose:compose" },
-    "arrow-kt": { "gh": "arrow-kt/arrow", "branch": "main", "eco": "maven", "pkg": "io.arrow-kt:arrow-core" },
-    "exposed": { "gh": "JetBrains/Exposed", "branch": "main", "eco": "maven", "pkg": "org.jetbrains.exposed:exposed-core" },
-    "rails": { "gh": "rails/rails", "branch": "main", "eco": "rubygems", "pkg": "rails" },
-    "rspec": { "gh": "rspec/rspec", "branch": "main", "eco": "rubygems", "pkg": "rspec" },
-    "sidekiq": { "gh": "sidekiq/sidekiq", "branch": "main", "eco": "rubygems", "pkg": "sidekiq" },
-    "devise": { "gh": "heartcombo/devise", "branch": "main", "eco": "rubygems", "pkg": "devise" },
-    "puma": { "gh": "puma/puma", "branch": "master", "eco": "rubygems", "pkg": "puma" },
-    "rack": { "gh": "rack/rack", "branch": "main", "eco": "rubygems", "pkg": "rack" },
-    "sinatra": { "gh": "sinatra/sinatra", "branch": "master", "eco": "rubygems", "pkg": "sinatra" },
-    "activerecord": { "gh": "rails/rails", "branch": "main", "eco": "rubygems", "pkg": "activerecord", "path": "activerecord" },
-    "graphql-ruby": { "gh": "rmosolgo/graphql-ruby", "branch": "master", "eco": "rubygems", "pkg": "graphql" },
-    "fastlane": { "gh": "fastlane/fastlane", "branch": "master", "eco": "rubygems", "pkg": "fastlane" },
-    "alamofire": { "gh": "Alamofire/Alamofire", "branch": "master", "eco": "swiftpm", "pkg": "Alamofire" },
-    "vapor": { "gh": "vapor/vapor", "branch": "main", "eco": "swiftpm", "pkg": "vapor" },
-    "swift-nio": { "gh": "apple/swift-nio", "branch": "main", "eco": "swiftpm", "pkg": "swift-nio" },
-    "swift-argument-parser": { "gh": "apple/swift-argument-parser", "branch": "main", "eco": "swiftpm", "pkg": "swift-argument-parser" },
-    "swift-collections": { "gh": "apple/swift-collections", "branch": "main", "eco": "swiftpm", "pkg": "swift-collections" },
-    "swift-log": { "gh": "apple/swift-log", "branch": "main", "eco": "swiftpm", "pkg": "swift-log" },
-    "kingfisher": { "gh": "onevcat/Kingfisher", "branch": "master", "eco": "swiftpm", "pkg": "Kingfisher" },
-    "composable-architecture": { "gh": "pointfreeco/swift-composable-architecture", "branch": "main", "eco": "swiftpm", "pkg": "swift-composable-architecture" },
-    "laravel": { "gh": "laravel/laravel", "branch": "master", "eco": "packagist", "pkg": "laravel/laravel", "docs_gh": "laravel/docs", "docs_branch": "master" },
-    "symfony": { "gh": "symfony/symfony", "branch": "7.1", "eco": "packagist", "pkg": "symfony/symfony" },
-    "doctrine-orm": { "gh": "doctrine/orm", "branch": "2.x", "eco": "packagist", "pkg": "doctrine/orm" },
-    "monolog": { "gh": "Seldaek/monolog", "branch": "main", "eco": "packagist", "pkg": "monolog/monolog" },
-    "phpunit": { "gh": "sebastianbergmann/phpunit", "branch": "main", "eco": "packagist", "pkg": "phpunit/phpunit" },
-    "pest": { "gh": "pestphp/pest", "branch": "v3.x", "eco": "packagist", "pkg": "pestphp/pest" },
-    "phoenix": { "gh": "phoenixframework/phoenix", "branch": "main", "eco": "hex", "pkg": "phoenix" },
-    "ecto": { "gh": "elixir-ecto/ecto", "branch": "main", "eco": "hex", "pkg": "ecto" },
-    "liveview": { "gh": "phoenixframework/phoenix_live_view", "branch": "main", "eco": "hex", "pkg": "phoenix_live_view" },
-    "oban": { "gh": "sorentwo/oban", "branch": "main", "eco": "hex", "pkg": "oban" },
-    "nerves": { "gh": "nerves-project/nerves", "branch": "main", "eco": "hex", "pkg": "nerves" },
-    "tesla": { "gh": "elixir-tesla/tesla", "branch": "main", "eco": "hex", "pkg": "tesla" },
-    "broadway": { "gh": "dashbitco/broadway", "branch": "main", "eco": "hex", "pkg": "broadway" },
-    "cats": { "gh": "typelevel/cats", "branch": "main", "eco": "maven", "pkg": "org.typelevel:cats-core" },
-    "akka": { "gh": "akka/akka", "branch": "main", "eco": "maven", "pkg": "com.typesafe.akka:akka-actor" },
-    "zio": { "gh": "zio-dev/zio", "branch": "main", "eco": "maven", "pkg": "dev.zio:zio" },
-    "play-framework": { "gh": "playframework/playframework", "branch": "main", "eco": "maven", "pkg": "org.playframework:play" },
-    "tapir": { "gh": "softwaremill/tapir", "branch": "main", "eco": "maven", "pkg": "com.softwaremill.sttp.tapir:tapir-core" },
-    "doobie": { "gh": "tpolecat/doobie", "branch": "main", "eco": "maven", "pkg": "org.tpolecat:doobie-core" },
-    "fmt": { "gh": "fmtlib/fmt", "branch": "master", "eco": "other", "pkg": "fmt" },
-    "spdlog": { "gh": "gabime/spdlog", "branch": "v1.x", "eco": "other", "pkg": "spdlog" },
-    "nlohmann-json": { "gh": "nlohmann/json", "branch": "develop", "eco": "other", "pkg": "nlohmann_json" },
-    "catch2": { "gh": "catchorg/Catch2", "branch": "devel", "eco": "other", "pkg": "Catch2" },
-    "boost": { "gh": "boostorg/boost", "branch": "master", "eco": "other", "pkg": "boost" },
-    "opencv": { "gh": "opencv/opencv", "branch": "master", "eco": "other", "pkg": "opencv" },
-    "abseil": { "gh": "abseil/abseil-cpp", "branch": "master", "eco": "other", "pkg": "absl" },
-    "grpc": { "gh": "grpc/grpc", "branch": "master", "eco": "other", "pkg": "grpc" },
-    "protobuf": { "gh": "protocolbuffers/protobuf", "branch": "main", "eco": "other", "pkg": "protobuf" },
-    "flutter": { "gh": "flutter/flutter", "branch": "stable", "eco": "pub", "pkg": "flutter", "docs_gh": "flutter/flutter", "docs_branch": "stable" },
-    "riverpod": { "gh": "riverpod/riverpod", "branch": "master", "eco": "pub", "pkg": "flutter_riverpod" },
-    "bloc": { "gh": "felangel/bloc", "branch": "master", "eco": "pub", "pkg": "flutter_bloc" },
-    "getx": { "gh": "jonataslaw/getx", "branch": "master", "eco": "pub", "pkg": "get" },
-    "drift": { "gh": "simolus3/drift", "branch": "master", "eco": "pub", "pkg": "drift" },
-    "clojure": { "gh": "clojure/clojure", "branch": "master", "eco": "maven", "pkg": "org.clojure:clojure" },
-    "ring": { "gh": "ring-clojure/ring", "branch": "master", "eco": "maven", "pkg": "ring:ring" },
-    "reagent": { "gh": "reagent-project/reagent", "branch": "master", "eco": "maven", "pkg": "reagent:reagent" },
-    "re-frame": { "gh": "day8/re-frame", "branch": "master", "eco": "maven", "pkg": "re-frame:re-frame" },
-    "malli": { "gh": "metosin/malli", "branch": "master", "eco": "maven", "pkg": "metosin:malli" },
-    "dataframes-jl": { "gh": "JuliaData/DataFrames.jl", "branch": "main", "eco": "other", "pkg": "DataFrames" },
-    "flux-jl": { "gh": "FluxML/Flux.jl", "branch": "master", "eco": "other", "pkg": "Flux" },
-    "pluto-jl": { "gh": "fonsp/Pluto.jl", "branch": "main", "eco": "other", "pkg": "Pluto" },
-    "makie-jl": { "gh": "MakieOrg/BeautifulMakie", "branch": "master", "eco": "other", "pkg": "Makie" },
-    "deno": { "gh": "denoland/deno", "branch": "main", "eco": "npm", "pkg": "@deno/deno" },
-    "oak": { "gh": "oakserver/oak", "branch": "main", "eco": "npm", "pkg": "@oak/oak" },
-    "fresh": { "gh": "denoland/fresh", "branch": "main", "eco": "npm", "pkg": "fresh" }
+    "typescript": {
+      "gh": "microsoft/TypeScript",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "typescript"
+    },
+    "react": {
+      "gh": "facebook/react",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "react"
+    },
+    "bun": {
+      "gh": "oven-sh/bun",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "bun",
+      "llms": "https://bun.sh/llms.txt"
+    },
+    "hono": {
+      "gh": "honojs/hono",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "hono",
+      "docs_gh": "honojs/website",
+      "docs_branch": "main"
+    },
+    "tailwindcss": {
+      "gh": "tailwindlabs/tailwindcss",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "tailwindcss",
+      "docs_gh": "tailwindlabs/tailwindcss.com",
+      "docs_branch": "main"
+    },
+    "zod": {
+      "gh": "colinhacks/zod",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "zod",
+      "path": "packages/zod"
+    },
+    "vite": {
+      "gh": "vitejs/vite",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "vite",
+      "path": "packages/vite"
+    },
+    "vitest": {
+      "gh": "vitest-dev/vitest",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "vitest"
+    },
+    "tanstack-query": {
+      "gh": "TanStack/query",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-query"
+    },
+    "drizzle-orm": {
+      "gh": "drizzle-team/drizzle-orm",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "drizzle-orm",
+      "llms": "https://orm.drizzle.team/llms.txt",
+      "docs_gh": "drizzle-team/drizzle-orm-docs",
+      "docs_branch": "main"
+    },
+    "astro": {
+      "gh": "withastro/astro",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "astro",
+      "path": "packages/astro",
+      "docs_gh": "withastro/docs",
+      "docs_branch": "main"
+    },
+    "ai-sdk": {
+      "gh": "vercel/ai",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "ai",
+      "path": "packages/ai"
+    },
+    "biome": {
+      "gh": "biomejs/biome",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@biomejs/biome",
+      "path": "packages/@biomejs/biome",
+      "docs_gh": "biomejs/website",
+      "docs_branch": "main"
+    },
+    "next": {
+      "gh": "vercel/next.js",
+      "branch": "canary",
+      "eco": "npm",
+      "pkg": "next",
+      "docs_gh": "vercel/next.js",
+      "docs_branch": "docs"
+    },
+    "nuxt": {
+      "gh": "nuxt/nuxt",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "nuxt",
+      "docs_gh": "nuxt/nuxt",
+      "docs_branch": "docs"
+    },
+    "svelte": {
+      "gh": "sveltejs/svelte",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "svelte",
+      "path": "packages/svelte"
+    },
+    "solid": {
+      "gh": "solidjs/solid",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "solid-js"
+    },
+    "qwik": {
+      "gh": "QwikDev/qwik",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@builder.io/qwik"
+    },
+    "remix": {
+      "gh": "remix-run/react-router",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@remix-run/react",
+      "docs_gh": "remix-run/react-router",
+      "docs_branch": "docs"
+    },
+    "trpc": {
+      "gh": "trpc/trpc",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@trpc/server",
+      "path": "packages/server"
+    },
+    "prisma": {
+      "gh": "prisma/prisma",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "prisma",
+      "docs_gh": "prisma/docs",
+      "docs_branch": "main"
+    },
+    "playwright": {
+      "gh": "microsoft/playwright",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "playwright"
+    },
+    "radix-ui": {
+      "gh": "radix-ui/primitives",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@radix-ui/react-dialog"
+    },
+    "valibot": {
+      "gh": "fabian-hiller/valibot",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "valibot"
+    },
+    "effect": {
+      "gh": "Effect-TS/effect",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "effect"
+    },
+    "elysia": {
+      "gh": "elysiajs/elysia",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "elysia"
+    },
+    "fastify": {
+      "gh": "fastify/fastify",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "fastify"
+    },
+    "express": {
+      "gh": "expressjs/express",
+      "branch": "master",
+      "eco": "npm",
+      "pkg": "express"
+    },
+    "nestjs": {
+      "gh": "nestjs/nest",
+      "branch": "master",
+      "eco": "npm",
+      "pkg": "@nestjs/core",
+      "docs_gh": "nestjs/docs.nestjs.com",
+      "docs_branch": "master"
+    },
+    "rxjs": {
+      "gh": "ReactiveX/rxjs",
+      "branch": "master",
+      "eco": "npm",
+      "pkg": "rxjs"
+    },
+    "date-fns": {
+      "gh": "date-fns/date-fns",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "date-fns"
+    },
+    "zustand": {
+      "gh": "pmndrs/zustand",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "zustand"
+    },
+    "jotai": {
+      "gh": "pmndrs/jotai",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "jotai"
+    },
+    "tanstack-router": {
+      "gh": "TanStack/router",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-router"
+    },
+    "tanstack-table": {
+      "gh": "TanStack/table",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-table"
+    },
+    "tanstack-form": {
+      "gh": "TanStack/form",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-form"
+    },
+    "tokio": {
+      "gh": "tokio-rs/tokio",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "tokio",
+      "path": "tokio"
+    },
+    "axum": {
+      "gh": "tokio-rs/axum",
+      "branch": "main",
+      "eco": "cargo",
+      "pkg": "axum",
+      "path": "axum"
+    },
+    "ratatui": {
+      "gh": "ratatui/ratatui",
+      "branch": "main",
+      "eco": "cargo",
+      "pkg": "ratatui"
+    },
+    "crossterm": {
+      "gh": "crossterm-rs/crossterm",
+      "branch": "main",
+      "eco": "cargo",
+      "pkg": "crossterm"
+    },
+    "rusqlite": {
+      "gh": "rusqlite/rusqlite",
+      "branch": "main",
+      "eco": "cargo",
+      "pkg": "rusqlite"
+    },
+    "tauri": {
+      "gh": "tauri-apps/tauri",
+      "branch": "main",
+      "eco": "cargo",
+      "pkg": "tauri"
+    },
+    "serde": {
+      "gh": "serde-rs/serde",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "serde"
+    },
+    "serde-json": {
+      "gh": "serde-rs/json",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "serde_json"
+    },
+    "clap": {
+      "gh": "clap-rs/clap",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "clap"
+    },
+    "reqwest": {
+      "gh": "seanmonstar/reqwest",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "reqwest"
+    },
+    "sqlx": {
+      "gh": "launchbadge/sqlx",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "sqlx"
+    },
+    "sea-orm": {
+      "gh": "SeaQL/sea-orm",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "sea-orm"
+    },
+    "actix-web": {
+      "gh": "actix/actix-web",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "actix-web",
+      "tag_prefix": "web-",
+      "path": "actix-web"
+    },
+    "rocket": {
+      "gh": "rwf2/Rocket",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "rocket"
+    },
+    "poem": {
+      "gh": "poem-web/poem",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "poem"
+    },
+    "tracing": {
+      "gh": "tokio-rs/tracing",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "tracing",
+      "path": "tracing"
+    },
+    "anyhow": {
+      "gh": "dtolnay/anyhow",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "anyhow"
+    },
+    "thiserror": {
+      "gh": "dtolnay/thiserror",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "thiserror"
+    },
+    "rayon": {
+      "gh": "rayon-rs/rayon",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "rayon"
+    },
+    "bevy": {
+      "gh": "bevyengine/bevy",
+      "branch": "main",
+      "eco": "cargo",
+      "pkg": "bevy"
+    },
+    "egui": {
+      "gh": "emilk/egui",
+      "branch": "master",
+      "eco": "cargo",
+      "pkg": "egui"
+    },
+    "uv": {
+      "gh": "astral-sh/uv",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "uv"
+    },
+    "ruff": {
+      "gh": "astral-sh/ruff",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "ruff"
+    },
+    "fastapi": {
+      "gh": "fastapi/fastapi",
+      "branch": "master",
+      "eco": "pypi",
+      "pkg": "fastapi"
+    },
+    "pydantic": {
+      "gh": "pydantic/pydantic",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "pydantic"
+    },
+    "polars": {
+      "gh": "pola-rs/polars",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "polars"
+    },
+    "django": {
+      "gh": "django/django",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "django",
+      "docs_gh": "django/djangoproject.com",
+      "docs_branch": "main"
+    },
+    "flask": {
+      "gh": "pallets/flask",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "flask"
+    },
+    "sqlalchemy": {
+      "gh": "sqlalchemy/sqlalchemy",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "sqlalchemy"
+    },
+    "httpx": {
+      "gh": "encode/httpx",
+      "branch": "master",
+      "eco": "pypi",
+      "pkg": "httpx"
+    },
+    "celery": {
+      "gh": "celery/celery",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "celery"
+    },
+    "scrapy": {
+      "gh": "scrapy/scrapy",
+      "branch": "master",
+      "eco": "pypi",
+      "pkg": "scrapy"
+    },
+    "pytest": {
+      "gh": "pytest-dev/pytest",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "pytest"
+    },
+    "langchain": {
+      "gh": "langchain-ai/langchain",
+      "branch": "master",
+      "eco": "pypi",
+      "pkg": "langchain",
+      "path": "libs/langchain/langchain"
+    },
+    "transformers": {
+      "gh": "huggingface/transformers",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "transformers"
+    },
+    "torch": {
+      "gh": "pytorch/pytorch",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "torch"
+    },
+    "pandas": {
+      "gh": "pandas-dev/pandas",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "pandas"
+    },
+    "numpy": {
+      "gh": "numpy/numpy",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "numpy"
+    },
+    "scikit-learn": {
+      "gh": "scikit-learn/scikit-learn",
+      "branch": "main",
+      "eco": "pypi",
+      "pkg": "scikit-learn"
+    },
+    "gin": {
+      "gh": "gin-gonic/gin",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/gin-gonic/gin"
+    },
+    "echo": {
+      "gh": "labstack/echo",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/labstack/echo/v4"
+    },
+    "fiber": {
+      "gh": "gofiber/fiber",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/gofiber/fiber/v2"
+    },
+    "chi": {
+      "gh": "go-chi/chi",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/go-chi/chi/v5"
+    },
+    "gorm": {
+      "gh": "go-gorm/gorm",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "gorm.io/gorm"
+    },
+    "cobra": {
+      "gh": "spf13/cobra",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/spf13/cobra"
+    },
+    "viper": {
+      "gh": "spf13/viper",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/spf13/viper"
+    },
+    "go-zero": {
+      "gh": "zeromicro/go-zero",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "github.com/zeromicro/go-zero"
+    },
+    "ent": {
+      "gh": "ent/ent",
+      "branch": "master",
+      "eco": "go",
+      "pkg": "entgo.io/ent"
+    },
+    "bubbletea": {
+      "gh": "charmbracelet/bubbletea",
+      "branch": "main",
+      "eco": "go",
+      "pkg": "github.com/charmbracelet/bubbletea"
+    },
+    "spring-boot": {
+      "gh": "spring-projects/spring-boot",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.springframework.boot:spring-boot",
+      "docs_gh": "spring-projects/spring-boot",
+      "docs_branch": "main"
+    },
+    "spring-framework": {
+      "gh": "spring-projects/spring-framework",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.springframework:spring-core"
+    },
+    "junit": {
+      "gh": "junit-team/junit5",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.junit.jupiter:junit-jupiter"
+    },
+    "mockito": {
+      "gh": "mockito/mockito",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.mockito:mockito-core"
+    },
+    "jackson": {
+      "gh": "FasterXML/jackson-databind",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "com.fasterxml.jackson.core:jackson-databind",
+      "path": "src/main/java",
+      "tag_prefix": "jackson-databind-"
+    },
+    "guava": {
+      "gh": "google/guava",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "com.google.guava:guava"
+    },
+    "lombok": {
+      "gh": "projectlombok/lombok",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "org.projectlombok:lombok"
+    },
+    "slf4j": {
+      "gh": "qos-ch/slf4j",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.slf4j:slf4j-api"
+    },
+    "ktor": {
+      "gh": "ktorio/ktor",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "io.ktor:ktor-server-core"
+    },
+    "kotlinx-coroutines": {
+      "gh": "Kotlin/kotlinx.coroutines",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "org.jetbrains.kotlinx:kotlinx-coroutines-core"
+    },
+    "compose-multiplatform": {
+      "gh": "JetBrains/compose-multiplatform",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "org.jetbrains.compose:compose"
+    },
+    "arrow-kt": {
+      "gh": "arrow-kt/arrow",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "io.arrow-kt:arrow-core"
+    },
+    "exposed": {
+      "gh": "JetBrains/Exposed",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.jetbrains.exposed:exposed-core"
+    },
+    "rails": {
+      "gh": "rails/rails",
+      "branch": "main",
+      "eco": "rubygems",
+      "pkg": "rails"
+    },
+    "rspec": {
+      "gh": "rspec/rspec",
+      "branch": "main",
+      "eco": "rubygems",
+      "pkg": "rspec"
+    },
+    "sidekiq": {
+      "gh": "sidekiq/sidekiq",
+      "branch": "main",
+      "eco": "rubygems",
+      "pkg": "sidekiq"
+    },
+    "devise": {
+      "gh": "heartcombo/devise",
+      "branch": "main",
+      "eco": "rubygems",
+      "pkg": "devise"
+    },
+    "puma": {
+      "gh": "puma/puma",
+      "branch": "master",
+      "eco": "rubygems",
+      "pkg": "puma"
+    },
+    "rack": {
+      "gh": "rack/rack",
+      "branch": "main",
+      "eco": "rubygems",
+      "pkg": "rack"
+    },
+    "sinatra": {
+      "gh": "sinatra/sinatra",
+      "branch": "master",
+      "eco": "rubygems",
+      "pkg": "sinatra"
+    },
+    "activerecord": {
+      "gh": "rails/rails",
+      "branch": "main",
+      "eco": "rubygems",
+      "pkg": "activerecord",
+      "path": "activerecord"
+    },
+    "graphql-ruby": {
+      "gh": "rmosolgo/graphql-ruby",
+      "branch": "master",
+      "eco": "rubygems",
+      "pkg": "graphql"
+    },
+    "fastlane": {
+      "gh": "fastlane/fastlane",
+      "branch": "master",
+      "eco": "rubygems",
+      "pkg": "fastlane"
+    },
+    "alamofire": {
+      "gh": "Alamofire/Alamofire",
+      "branch": "master",
+      "eco": "swiftpm",
+      "pkg": "Alamofire"
+    },
+    "vapor": {
+      "gh": "vapor/vapor",
+      "branch": "main",
+      "eco": "swiftpm",
+      "pkg": "vapor"
+    },
+    "swift-nio": {
+      "gh": "apple/swift-nio",
+      "branch": "main",
+      "eco": "swiftpm",
+      "pkg": "swift-nio"
+    },
+    "swift-argument-parser": {
+      "gh": "apple/swift-argument-parser",
+      "branch": "main",
+      "eco": "swiftpm",
+      "pkg": "swift-argument-parser"
+    },
+    "swift-collections": {
+      "gh": "apple/swift-collections",
+      "branch": "main",
+      "eco": "swiftpm",
+      "pkg": "swift-collections"
+    },
+    "swift-log": {
+      "gh": "apple/swift-log",
+      "branch": "main",
+      "eco": "swiftpm",
+      "pkg": "swift-log"
+    },
+    "kingfisher": {
+      "gh": "onevcat/Kingfisher",
+      "branch": "master",
+      "eco": "swiftpm",
+      "pkg": "Kingfisher"
+    },
+    "composable-architecture": {
+      "gh": "pointfreeco/swift-composable-architecture",
+      "branch": "main",
+      "eco": "swiftpm",
+      "pkg": "swift-composable-architecture"
+    },
+    "laravel": {
+      "gh": "laravel/laravel",
+      "branch": "master",
+      "eco": "packagist",
+      "pkg": "laravel/laravel",
+      "docs_gh": "laravel/docs",
+      "docs_branch": "master"
+    },
+    "symfony": {
+      "gh": "symfony/symfony",
+      "branch": "7.1",
+      "eco": "packagist",
+      "pkg": "symfony/symfony"
+    },
+    "doctrine-orm": {
+      "gh": "doctrine/orm",
+      "branch": "2.x",
+      "eco": "packagist",
+      "pkg": "doctrine/orm"
+    },
+    "monolog": {
+      "gh": "Seldaek/monolog",
+      "branch": "main",
+      "eco": "packagist",
+      "pkg": "monolog/monolog"
+    },
+    "phpunit": {
+      "gh": "sebastianbergmann/phpunit",
+      "branch": "main",
+      "eco": "packagist",
+      "pkg": "phpunit/phpunit"
+    },
+    "pest": {
+      "gh": "pestphp/pest",
+      "branch": "v3.x",
+      "eco": "packagist",
+      "pkg": "pestphp/pest"
+    },
+    "phoenix": {
+      "gh": "phoenixframework/phoenix",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "phoenix"
+    },
+    "ecto": {
+      "gh": "elixir-ecto/ecto",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "ecto"
+    },
+    "liveview": {
+      "gh": "phoenixframework/phoenix_live_view",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "phoenix_live_view"
+    },
+    "oban": {
+      "gh": "sorentwo/oban",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "oban"
+    },
+    "nerves": {
+      "gh": "nerves-project/nerves",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "nerves"
+    },
+    "tesla": {
+      "gh": "elixir-tesla/tesla",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "tesla"
+    },
+    "broadway": {
+      "gh": "dashbitco/broadway",
+      "branch": "main",
+      "eco": "hex",
+      "pkg": "broadway"
+    },
+    "cats": {
+      "gh": "typelevel/cats",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.typelevel:cats-core"
+    },
+    "akka": {
+      "gh": "akka/akka",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "com.typesafe.akka:akka-actor"
+    },
+    "zio": {
+      "gh": "zio/zio",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "dev.zio:zio"
+    },
+    "play-framework": {
+      "gh": "playframework/playframework",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.playframework:play"
+    },
+    "tapir": {
+      "gh": "softwaremill/tapir",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "com.softwaremill.sttp.tapir:tapir-core"
+    },
+    "doobie": {
+      "gh": "tpolecat/doobie",
+      "branch": "main",
+      "eco": "maven",
+      "pkg": "org.tpolecat:doobie-core"
+    },
+    "fmt": {
+      "gh": "fmtlib/fmt",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "fmt"
+    },
+    "spdlog": {
+      "gh": "gabime/spdlog",
+      "branch": "v1.x",
+      "eco": "other",
+      "pkg": "spdlog"
+    },
+    "nlohmann-json": {
+      "gh": "nlohmann/json",
+      "branch": "develop",
+      "eco": "other",
+      "pkg": "nlohmann_json"
+    },
+    "catch2": {
+      "gh": "catchorg/Catch2",
+      "branch": "devel",
+      "eco": "other",
+      "pkg": "Catch2"
+    },
+    "boost": {
+      "gh": "boostorg/boost",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "boost"
+    },
+    "opencv": {
+      "gh": "opencv/opencv",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "opencv"
+    },
+    "abseil": {
+      "gh": "abseil/abseil-cpp",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "absl"
+    },
+    "grpc": {
+      "gh": "grpc/grpc",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "grpc"
+    },
+    "protobuf": {
+      "gh": "protocolbuffers/protobuf",
+      "branch": "main",
+      "eco": "other",
+      "pkg": "protobuf"
+    },
+    "flutter": {
+      "gh": "flutter/flutter",
+      "branch": "stable",
+      "eco": "pub",
+      "pkg": "flutter",
+      "docs_gh": "flutter/flutter",
+      "docs_branch": "stable"
+    },
+    "riverpod": {
+      "gh": "riverpod/riverpod",
+      "branch": "master",
+      "eco": "pub",
+      "pkg": "flutter_riverpod"
+    },
+    "bloc": {
+      "gh": "felangel/bloc",
+      "branch": "master",
+      "eco": "pub",
+      "pkg": "flutter_bloc"
+    },
+    "getx": {
+      "gh": "jonataslaw/getx",
+      "branch": "master",
+      "eco": "pub",
+      "pkg": "get"
+    },
+    "drift": {
+      "gh": "simolus3/drift",
+      "branch": "master",
+      "eco": "pub",
+      "pkg": "drift"
+    },
+    "clojure": {
+      "gh": "clojure/clojure",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "org.clojure:clojure",
+      "tag_prefix": "clojure-"
+    },
+    "ring": {
+      "gh": "ring-clojure/ring",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "ring:ring"
+    },
+    "reagent": {
+      "gh": "reagent-project/reagent",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "reagent:reagent"
+    },
+    "re-frame": {
+      "gh": "day8/re-frame",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "re-frame:re-frame"
+    },
+    "malli": {
+      "gh": "metosin/malli",
+      "branch": "master",
+      "eco": "maven",
+      "pkg": "metosin:malli"
+    },
+    "dataframes-jl": {
+      "gh": "JuliaData/DataFrames.jl",
+      "branch": "main",
+      "eco": "other",
+      "pkg": "DataFrames"
+    },
+    "flux-jl": {
+      "gh": "FluxML/Flux.jl",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "Flux"
+    },
+    "pluto-jl": {
+      "gh": "fonsp/Pluto.jl",
+      "branch": "main",
+      "eco": "other",
+      "pkg": "Pluto"
+    },
+    "makie-jl": {
+      "gh": "MakieOrg/BeautifulMakie",
+      "branch": "master",
+      "eco": "other",
+      "pkg": "Makie"
+    },
+    "deno": {
+      "gh": "denoland/deno",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@deno/deno"
+    },
+    "oak": {
+      "gh": "oakserver/oak",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@oak/oak"
+    },
+    "fresh": {
+      "gh": "denoland/fresh",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "fresh"
+    }
   }
 }

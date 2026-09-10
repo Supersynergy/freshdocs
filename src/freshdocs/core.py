@@ -304,30 +304,35 @@ def version_ref_candidates(name: str, meta: dict[str, Any], version: str) -> lis
     clean = version.removeprefix("v")
     package = str(meta.get("pkg") or name)
     package_leaf = package.rsplit("/", 1)[-1]
-    return list(
-        dict.fromkeys(
-            [
-                version,
-                f"v{clean}",
-                f"{package}@{clean}",
-                f"{package_leaf}@{clean}",
-                f"{name}@{clean}",
-                # Projects such as bun tag releases as <name>-v<version>.
-                f"{package_leaf}-v{clean}",
-                f"{name}-v{clean}",
-                f"{package_leaf}-{clean}",
-                f"{name}-{clean}",
-            ]
-        )
-    )
+    # Some monorepos prefix tags with the crate name (e.g. actix-web uses web-v4.15.0)
+    tag_prefix = str(meta.get("tag_prefix", ""))
+    base = [
+        version,
+        f"v{clean}",
+        f"{package}@{clean}",
+        f"{package_leaf}@{clean}",
+        f"{name}@{clean}",
+        # Projects such as bun tag releases as <name>-v<version>.
+        f"{package_leaf}-v{clean}",
+        f"{name}-v{clean}",
+        f"{package_leaf}-{clean}",
+        f"{name}-{clean}",
+    ]
+    if tag_prefix:
+        base.insert(0, f"{tag_prefix}v{clean}")
+        base.insert(1, f"{tag_prefix}{clean}")
+    return list(dict.fromkeys(base))
 
 
 def _fetch_repo_sources(repo: str, prefixes: list[str], ref: str) -> list[DocSource]:
     sources: list[DocSource] = []
     encoded_ref = urllib.parse.quote(ref, safe="")
-    # Try .md first, then .rst, then .txt — many Python/Sphinx projects use .rst
-    readme_candidates = ("README.md", "README.rst", "README.txt", "readme.md")
-    changelog_candidates = ("CHANGELOG.md", "CHANGES.md", "CHANGES.rst", "CHANGELOG.rst", "HISTORY.rst")
+    # Try .md first, then .rst, then .adoc, then .txt
+    # Also try Readme.md (capital R, lowercase m) — express, nestjs use this casing
+    # .adoc is used by Spring/AsciiDoc projects
+    # readme.txt (lowercase) — clojure uses this
+    readme_candidates = ("README.md", "Readme.md", "README.rst", "README.adoc", "README.txt", "readme.md", "readme.txt")
+    changelog_candidates = ("CHANGELOG.md", "CHANGES.md", "CHANGES.rst", "CHANGELOG.rst", "HISTORY.rst", "changes.md")
     for candidates, is_changelog in ((readme_candidates, False), (changelog_candidates, True)):
         for prefix in prefixes:
             for filename in candidates:
@@ -741,7 +746,9 @@ def sync_library(name: str, force: bool = False, version: str | None = None) -> 
     except Exception:
         target_version = "?"
     if target_version == "?":
-        return {"lib": name, "version": target_version, "checked": checked, "inserted": 0, "status": "failed"}
+        # Version can't be resolved from any registry. Try branch fallback
+        # so repos without releases (e.g. docs-only repos) still get indexed.
+        target_version = str(meta.get("branch", "main"))
     if not force and not is_stale(state, name, target_version, meta) and has_indexed_docs(name, target_version):
         current = state_for_version(state, name, target_version)
         return {
