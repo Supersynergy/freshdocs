@@ -6,6 +6,7 @@ import os
 import pathlib
 import re
 import sys
+from typing import Any
 
 from . import __version__
 from .core import (
@@ -133,6 +134,17 @@ def build_parser() -> argparse.ArgumentParser:
     sources.add_argument("--top-languages", type=int, default=50, help="number of language rows to emit; use 300 for broad agent coverage")
     sources.add_argument("--live", action="store_true", help="refresh GitHut and GitHub Linguist language sources before rendering")
     sources.add_argument("--format", choices=["markdown", "json", "jsonl"], default="markdown")
+
+    deprecations = sub.add_parser("deprecations", help="scan cached docs for @deprecated markers and breaking changes")
+    deprecations.add_argument("--project", default=".")
+    deprecations.add_argument("--lib", action="append", help="limit to specific libraries")
+    deprecations.add_argument("--json", action="store_true")
+
+    drift = sub.add_parser("drift", help="compare cached docs against live repo for new major versions")
+    drift.add_argument("--project", default=".")
+    drift.add_argument("--lib", action="append", help="limit to specific libraries")
+    drift.add_argument("--json", action="store_true")
+
     return p
 
 
@@ -447,6 +459,146 @@ def cmd_hook(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_deprecations(args: argparse.Namespace) -> int:
+    """Scan cached docs for @deprecated markers and breaking change indicators."""
+    root = pathlib.Path(args.project).expanduser().resolve()
+    analysis = project_analysis(root)
+    versions = detected_versions(analysis)
+    # Also include requested versions for libraries without lockfiles
+    for item in analysis.get("libraries", []):
+        lib = item.get("lib", "")
+        if lib not in versions and item.get("requested"):
+            v = item["requested"]
+            # Strip version constraints like >=, ~=, ==
+            v = re.sub(r"^[<>=~!]+", "", v).strip()
+            if v and re.match(r"\d+(?:\.\d+)*", v):
+                versions[lib] = v
+    libs = set(args.lib) if args.lib else set(versions.keys())
+    if not libs:
+        print("no registered libraries detected; sync first")
+        return 0
+    from .core import db
+
+    con = db()
+    results: list[dict[str, Any]] = []
+    # FTS5 query for @deprecated, DEPRECATED, breaking, removed, migration
+    patterns = [
+        "@deprecated",
+        "DEPRECATED",
+        "breaking change",
+        "breaking-change",
+        "BREAKING",
+        "removed in",
+        "will be removed",
+        "migration guide",
+        "migrating from",
+        "no longer supported",
+        "use instead",
+        "replaced by",
+    ]
+    for lib in sorted(libs):
+        version = versions.get(lib, "")
+        if not version:
+            continue
+        for pattern in patterns:
+            try:
+                rows = con.execute(
+                    "SELECT title, text, source FROM docs WHERE lib = ? AND version = ? AND text LIKE ? LIMIT 5",
+                    (lib, version, f"%{pattern}%"),
+                ).fetchall()
+            except Exception:
+                rows = []
+            for title, text, source in rows:
+                # Extract a compact snippet around the pattern
+                idx = text.lower().find(pattern.lower())
+                if idx == -1:
+                    snippet = text[:200]
+                else:
+                    start = max(0, idx - 80)
+                    end = min(len(text), idx + len(pattern) + 120)
+                    snippet = ("..." if start > 0 else "") + text[start:end] + ("..." if end < len(text) else "")
+                results.append(
+                    {
+                        "lib": lib,
+                        "version": version,
+                        "pattern": pattern,
+                        "title": title,
+                        "source": source,
+                        "snippet": snippet.strip(),
+                    }
+                )
+    con.close()
+    if args.json:
+        print(json.dumps(results, indent=2))
+        return 0
+    if not results:
+        print("no deprecation or breaking-change markers found in cached docs")
+        return 0
+    print(f"DEPRECATION SCAN: {len(results)} markers across {len(set(r['lib'] for r in results))} libraries")
+    print()
+    for r in results:
+        print(f"[{r['lib']} {r['version']}] {r['pattern']}")
+        print(f"  title: {r['title']}")
+        print(f"  source: {r['source']}")
+        print(f"  {r['snippet']}")
+        print()
+    return 0
+
+
+def cmd_drift(args: argparse.Namespace) -> int:
+    """Compare cached docs against live repo for new major versions."""
+    root = pathlib.Path(args.project).expanduser().resolve()
+    analysis = project_analysis(root)
+    versions = detected_versions(analysis)
+    libs = set(args.lib) if args.lib else set(versions.keys())
+    if not libs:
+        print("no registered libraries detected; sync first")
+        return 0
+    from .core import ensure_registry, github_latest, latest_version
+
+    registry = ensure_registry()
+    results: list[dict[str, Any]] = []
+    for lib in sorted(libs):
+        meta = registry.get("libs", {}).get(lib)
+        if not meta:
+            continue
+        installed = versions.get(lib, "")
+        if not installed:
+            continue
+        try:
+            upstream_latest = latest_version(meta) or github_latest(meta.get("gh", ""))
+        except Exception:
+            upstream_latest = ""
+        if not upstream_latest:
+            continue
+        # Compare major versions
+        installed_major = installed.split(".")[0] if installed else ""
+        upstream_major = upstream_latest.split(".")[0] if upstream_latest else ""
+        drifted = installed_major != upstream_major
+        results.append(
+            {
+                "lib": lib,
+                "installed": installed,
+                "upstream_latest": upstream_latest,
+                "major_drift": drifted,
+                "repo": meta.get("gh", ""),
+            }
+        )
+    if args.json:
+        print(json.dumps(results, indent=2))
+        return 0
+    if not results:
+        print("no drift data available; ensure libraries are synced")
+        return 0
+    drifted = [r for r in results if r["major_drift"]]
+    print(f"DRIFT SCAN: {len(results)} libraries checked, {len(drifted)} with major-version drift")
+    print()
+    for r in results:
+        marker = "  DRIFT" if r["major_drift"] else "  ok"
+        print(f"{marker} [{r['lib']}] installed={r['installed']} upstream={r['upstream_latest']} repo={r['repo']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "export-synapse":
@@ -500,6 +652,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "sources":
         print(render_source_plan(build_source_plan(args.top_languages, live=args.live), args.format), end="")
         return 0
+    if args.cmd == "deprecations":
+        return cmd_deprecations(args)
+    if args.cmd == "drift":
+        return cmd_drift(args)
     parser.error(f"unknown command: {args.cmd}")
     return 2
 
