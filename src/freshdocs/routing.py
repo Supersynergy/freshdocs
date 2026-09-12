@@ -9,12 +9,17 @@ from . import core
 FRESH_RISK = re.compile(
     r"\b(?:aktuell|aktuelle|current|fresh|latest|neueste|version|api|sdk|framework|bibliothek|library|package|paket|"
     r"dependency|dependencies|abhängigkeit|upgrade|update|migration|migrate|deprecated|deprecation|breaking|"
-    r"release|changelog|docs|documentation|dokumentation)\b",
+    r"release|changelog|docs|documentation|dokumentation|how to|how do|wie man|wie erstelle|example|beispiel|"
+    r"usage|verwendung|implement|create|erstellen|setup|einrichten|configure|konfigurieren|middleware|websocket|"
+    r"handler|endpoint|route|routing|schema|validation|validierung|auth|authentication|authentifizierung|cookie|"
+    r"session|token|jwt|oauth)\b",
     re.IGNORECASE,
 )
 CODE_ACTION = re.compile(
     r"\b(?:bau|baue|build|implement|schreib|write|fix|reparier|debug|install|integrier|refactor|compile|test|"
-    r"programmier|code|fehler|error)\w*\b",
+    r"programmier|code|fehler|error|create|erstellen|setup|einrichten|configure|konfigurieren|add|hinzufügen|"
+    r"remove|entfernen|delete|löschen|update|aktualisieren|change|ändern|modify|modifizieren|use|verwenden|"
+    r"call|aufrufen|invoke|aufrufen|execute|ausführen|run|ausführen|start|starten|stop|stoppen)\w*\b",
     re.IGNORECASE,
 )
 

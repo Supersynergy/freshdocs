@@ -149,6 +149,39 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "freshdocs_deprecations",
+        "description": "Scan cached docs for @deprecated markers, version-filtered against installed versions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "default": "."},
+                "libs": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+    },
+    {
+        "name": "freshdocs_drift",
+        "description": "Compare cached docs against live repos for new major versions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "default": "."},
+                "libs": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+    },
+    {
+        "name": "freshdocs_auto_registry",
+        "description": "Discover unregistered dependencies from project lockfiles and register them.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "default": "."},
+                "limit": {"type": "integer", "default": 20},
+            },
+        },
+    },
 ]
 
 
@@ -245,6 +278,42 @@ def call_tool(
             "verdicts": [v.as_dict() for v in verdicts],
             "summary": summarise(verdicts),
         }, indent=1))
+    if name == "freshdocs_deprecations":
+        root = pathlib.Path(args.get("project", ".")).expanduser().resolve()
+        import argparse as _ap
+        import contextlib as _cl
+        import io as _io
+        from .cli import cmd_deprecations
+
+        ns = _ap.Namespace(project=str(root), lib=args.get("libs"), json=True)
+        buf = _io.StringIO()
+        with _cl.redirect_stdout(buf):
+            cmd_deprecations(ns)
+        return tool_text(buf.getvalue().strip())
+    if name == "freshdocs_drift":
+        root = pathlib.Path(args.get("project", ".")).expanduser().resolve()
+        import argparse as _ap
+        import contextlib as _cl
+        import io as _io
+        from .cli import cmd_drift
+
+        ns = _ap.Namespace(project=str(root), lib=args.get("libs"), json=True)
+        buf = _io.StringIO()
+        with _cl.redirect_stdout(buf):
+            cmd_drift(ns)
+        return tool_text(buf.getvalue().strip())
+    if name == "freshdocs_auto_registry":
+        root = pathlib.Path(args.get("project", ".")).expanduser().resolve()
+        import argparse as _ap
+        import contextlib as _cl
+        import io as _io
+        from .cli import cmd_auto_registry
+
+        ns = _ap.Namespace(project=str(root), json=True, limit=int(args.get("limit", 20)))
+        buf = _io.StringIO()
+        with _cl.redirect_stdout(buf):
+            cmd_auto_registry(ns)
+        return tool_text(buf.getvalue().strip())
     raise KeyError(f"unknown tool: {name}")
 
 

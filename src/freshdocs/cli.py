@@ -692,6 +692,9 @@ def _resolve_registry(lib: str, eco: str, pkg: str) -> str | None:
     import urllib.request
     import urllib.parse
 
+    # Strip @types/ prefix — types packages resolve to the type repo, not the lib repo
+    if pkg.startswith("@types/"):
+        pkg = pkg[7:]
     headers = {"User-Agent": "freshdocs/0.6"}
     urls = {
         "npm": f"https://registry.npmjs.org/{urllib.parse.quote(pkg, safe='')}/latest",
@@ -721,18 +724,21 @@ def _resolve_registry(lib: str, eco: str, pkg: str) -> str | None:
         elif eco == "rubygems":
             repo_url = data.get("source_code_uri", "") or data.get("homepage_uri", "")
         elif eco == "packagist":
-            # p2 API returns a list
             if isinstance(data, list) and data:
                 repo_url = data[0].get("repository", "") or data[0].get("source", {}).get("url", "")
             elif isinstance(data, dict):
                 repo_url = data.get("repository", "") or data.get("source", {}).get("url", "")
         elif eco == "go":
-            repo_url = data.get("module", "") or pkg  # Go module path IS the repo
+            repo_url = data.get("module", "") or pkg
         elif eco == "hex":
             repo_url = data.get("meta", {}).get("links", {}).get("GitHub", "") or data.get("meta", {}).get("repository", "")
         elif eco == "pub":
             repo_url = data.get("latest", {}).get("pubspec", {}).get("repository", "") or data.get("latest", {}).get("pubspec", {}).get("homepage", "")
-        return _github_repo_from_url(repo_url)
+        gh = _github_repo_from_url(repo_url)
+        # Sanity check: don't resolve to DefinitelyTyped unless the package IS a type package
+        if gh == "DefinitelyTyped/DefinitelyTyped" and not pkg.startswith("@types/"):
+            return None
+        return gh
     except Exception:
         return None
 
@@ -814,7 +820,7 @@ def cmd_backfill(args: argparse.Namespace) -> int:
             return 0
         scope = ""
         if args.lib:
-            scope = " AND lib IN (" + ",".join("?" * len(args.lib)) + ")"
+            scope = " AND d.lib IN (" + ",".join("?" * len(args.lib)) + ")"
         limit_clause = f" LIMIT {args.limit}" if args.limit else ""
         rows = con.execute(
             f"SELECT d.id, d.lib, d.version, d.text FROM docs d LEFT JOIN doc_embeddings e ON e.doc_id = d.id WHERE e.doc_id IS NULL{scope}{limit_clause}",

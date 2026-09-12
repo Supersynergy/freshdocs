@@ -10,15 +10,13 @@
       "gh": "facebook/react",
       "branch": "main",
       "eco": "npm",
-      "pkg": "react",
-      "llms": "https://raw.githubusercontent.com/facebook/react/main/llms.txt"
+      "pkg": "react"
     },
     "bun": {
       "gh": "oven-sh/bun",
       "branch": "main",
       "eco": "npm",
-      "pkg": "bun",
-      "llms": "https://bun.sh/llms.txt"
+      "pkg": "bun"
     },
     "hono": {
       "gh": "honojs/hono",
@@ -49,8 +47,7 @@
       "gh": "vitejs/vite",
       "branch": "main",
       "eco": "npm",
-      "pkg": "vite",
-      "path": "packages/vite"
+      "pkg": "vite"
     },
     "vitest": {
       "gh": "vitest-dev/vitest",
@@ -89,15 +86,6 @@
       "eco": "npm",
       "pkg": "ai",
       "path": "packages/ai"
-    },
-    "biome": {
-      "gh": "biomejs/biome",
-      "branch": "main",
-      "eco": "npm",
-      "pkg": "@biomejs/biome",
-      "path": "packages/@biomejs/biome",
-      "docs_gh": "biomejs/website",
-      "docs_branch": "main"
     },
     "next": {
       "gh": "vercel/next.js",
@@ -510,7 +498,8 @@
       "gh": "labstack/echo",
       "branch": "master",
       "eco": "go",
-      "pkg": "github.com/labstack/echo/v4"
+      "pkg": "github.com/labstack/echo/v4",
+      "llms": "https://raw.githubusercontent.com/labstack/echo/master/llms.txt"
     },
     "fiber": {
       "gh": "gofiber/fiber",
@@ -1025,6 +1014,48 @@
       "branch": "main",
       "eco": "npm",
       "pkg": "fresh"
+    },
+    "biome": {
+      "gh": "biomejs/biome",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@biomejs/biome"
+    },
+    "react-form": {
+      "gh": "TanStack/form",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-form"
+    },
+    "react-router": {
+      "gh": "TanStack/router",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-router"
+    },
+    "react-router-devtools": {
+      "gh": "TanStack/router",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/react-router-devtools"
+    },
+    "router-plugin": {
+      "gh": "TanStack/router",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "@tanstack/router-plugin"
+    },
+    "node": {
+      "gh": "nodejs/node",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "node"
+    },
+    "nodemailer": {
+      "gh": "nodemailer/nodemailer",
+      "branch": "main",
+      "eco": "npm",
+      "pkg": "nodemailer"
     }
   }
 }
