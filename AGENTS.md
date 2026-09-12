@@ -1,93 +1,58 @@
-# Freshdocs Agent Contract
+# Freshdocs — Agent Guide
 
-Freshdocs exists to keep coding agents from using stale API facts with confidence.
+Freshdocs provides version-pinned, locally searchable documentation for coding agents. It prevents stale API facts by fetching real docs from library repos and indexing them in SQLite FTS5.
 
-Use it when a task mentions current APIs, package versions, framework behavior, migrations, deprecations, or generated code that depends on third-party libraries.
-
-Use `freshdocs sources` when the task is discovery-oriented: finding current language ecosystems, tools, repos, awesome lists, package registries, or GitStars/ghmax harvest commands.
-
-## Before Code Changes
-
-Run:
+## Quick Commands
 
 ```sh
-freshdocs analyze --project .
-freshdocs context "$USER_TASK" --project . --sync-stale
+freshdocs context "how to use middleware" --lib hono --limit 4
+freshdocs context "websocket state sharing" --lib axum --lib tokio
+freshdocs search "cookie parser" --lib hono --limit 3
+freshdocs sync --project .          # refresh stale docs
+freshdocs sync --latest --project . # sync latest versions
+freshdocs status                    # show all libs + freshness
+freshdocs doctor                    # health check
+freshdocs analyze --project .       # detect project libs
+freshdocs deprecations --project .  # scan for deprecated APIs
+freshdocs drift --project .         # check for new major versions
+freshdocs auto-registry --project . # auto-register unregistered deps
+freshdocs backfill --embeddings     # generate semantic embeddings (optional)
 ```
 
-Use the returned block as narrow context. Do not paste broad docs when the task only needs one library or one API family.
+## Features
 
-## Exact-Library Routing
+- **Version-pinned**: docs fetched at exact version refs (not latest)
+- **Smart budget**: dynamic limit based on query complexity (2-12 chunks)
+- **Code extraction**: `is_code` flag boosts code blocks for "how do I" queries
+- **Semantic search**: optional fastembed hybrid FTS5+embeddings (graceful fallback)
+- **Cross-library links**: detects lib references in docs, includes related context
+- **Diff-aware sync**: commit_sha stored, same-SHA skips re-fetch
+- **Version-aware deprecations**: filters `@deprecated since X.Y` against installed version
+- **Auto-registry**: discovers unregistered deps from lockfiles, resolves to GitHub repos
+- **llms.txt**: prioritized when available (13 libs)
 
-When the user names libraries directly, pass them explicitly:
+## MCP Tools
 
-```sh
-freshdocs context "cookie middleware in hono" --lib hono --limit 4
-freshdocs context "axum websocket shared state" --lib axum --lib tokio --limit 6
-freshdocs sources --top-languages 300 --format jsonl
-```
+- `freshdocs_context` — full context pack for a task
+- `freshdocs_search` — raw FTS5 search
+- `freshdocs_sync` — trigger sync
+- `freshdocs_detect` — detect project libs
+- `freshdocs_analyze` — full project analysis
+- `freshdocs_sources` — library source discovery
+- `freshdocs_identity` — model identity probe
+- `freshdocs_probe` — model capability probe
+- `freshdocs_gap` — model gap analysis
 
-## Staleness Rule
+## Integration
 
-If a relevant library has no cached docs or Freshdocs marks its content stale, sync the exact project version before relying on the answer:
+- **Claude Code**: `UserPromptSubmit` hook calls `freshdocs context` for API/docs prompts
+- **Codex**: `routed_context` in `routing.py` handles auto-sync + context
+- **Agent Token Saver**: `token-stack-prompt.py` includes freshdocs stage (fail-open)
+- **MCP**: `freshdocs mcp` serves MCP tools to any MCP client
 
-```sh
-freshdocs sync --project .
-```
+## Cache
 
-Freshness is adaptive: preview versions refresh daily, npm/GitHub sources every 3 days, and stable Python/Rust packages every 7 days unless the registry overrides the window. Network calls belong in sync. Prompt-time context comes from the local cache.
-
-## Done Rule
-
-An agent may claim a docs-grounded implementation only when:
-
-- the relevant docs pack was generated for the task
-- snippets include project version, content-fetch date, source URL, and ref status
-- `branch-fallback` is not presented as an exact version tag
-- `docs-commit <sha>` is presented as current documentation prose, not as the library's own version tag
-- generated code passes the repo's real tests
-- missing docs are stated instead of guessed
-
-## Gap Rule
-
-Freshdocs detects your model from hook/MCP metadata, provider model environment, or a
-known agent's `--model` argument. Do not repeat a model id on every call:
-
-```sh
-freshdocs models --probe                  # answer once, honestly, from memory
-freshdocs models --record '<your JSON answer>'
-freshdocs context "$USER_TASK" --project . --sync-stale
-```
-
-For MCP, call `freshdocs_identity` first. If the host exposed the model and a measured
-profile exists, proceed without a model argument. If an older host omitted identity,
-include your exact model id on one `freshdocs_probe` or `freshdocs_context` call; the
-server retains it for the session.
-
-Answer the probe with your best recollection. Do not deflate it to seem safe: an answer
-that is a year too conservative wastes context on every later prompt, while an invented
-version is rejected by the registry. If identity or a trustworthy profile is missing,
-Freshdocs loads every relevant library in full. This is intentionally safe, not cheap.
-
-The pack then states a verdict per library. Read it as an instruction:
-
-- `training gap` and `pinned behind training`: you do not reliably know this API. Use the snippets, not your memory.
-- `covered by training`: your memory and the project agree. The short confirmation is deliberate; do not ask for more.
-- `unverified`: coverage could not be established, so the full pack was loaded. Treat it as a gap.
-
-Never infer that a missing verdict means a library is safe to answer from memory.
-
-## Miss Rule
-
-When a context pack starts with `RESULT: no matching documentation`, the local cache cannot answer the question. Rewording the query cannot change that.
-
-Run the `FIX` command shown in the block once. If the miss repeats, state that the API could not be verified against current docs and continue without inventing one.
-
-## Do Not
-
-- Do not use Freshdocs as an infinite context dump.
-- Do not treat README snippets as stronger than local tests.
-- Do not hide stale or missing docs.
-- Do not add new default libraries without official source URLs.
-- Do not retry reworded queries after a reported miss; close the cache gap instead.
-- Do not present a `live-unversioned` or `docs-commit` page as if it were pinned to the project version.
+- `~/.freshdocs/registry.json` — library registry (166 libs)
+- `~/.freshdocs/state.json` — sync state per library/version
+- `~/.freshdocs/freshdocs.db` — SQLite FTS5 index (43K chunks, 194MB)
+- `~/.freshdocs/freshdocs.db` → `doc_embeddings` — optional semantic embeddings

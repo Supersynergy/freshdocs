@@ -635,6 +635,11 @@ def db() -> sqlite3.Connection:
         con.execute("ALTER TABLE docs ADD COLUMN nav REAL NOT NULL DEFAULT 0")
     if "is_code" not in columns:
         con.execute("ALTER TABLE docs ADD COLUMN is_code INTEGER NOT NULL DEFAULT 0")
+        # Backfill existing rows: mark chunks that contain code blocks
+        con.execute("""
+            UPDATE docs SET is_code = 1
+            WHERE text LIKE '%```%' AND is_code = 0
+        """)
     return con
 
 
@@ -704,8 +709,16 @@ def _index_doc_chunks(
     for i, chunk in enumerate(chunks):
         first = next((line for line in chunk.splitlines() if line.strip() and not line.startswith("<!--")), "")
         title = re.sub(r"^#+\s*", "", first).strip()[:80] or f"chunk {i}"
-        # Detect code blocks: if the chunk starts with ``` or has substantial code content
-        is_code = 1 if chunk.strip().startswith("```") or (chunk.count("```") >= 2 and len(chunk) < 800) else 0
+        # Detect code blocks: chunk starts with ``` or has substantial code content
+        # (a chunk is "code" if it has a fenced block covering >40% of its length)
+        stripped = chunk.strip()
+        if stripped.startswith("```"):
+            is_code = 1
+        else:
+            # Count chars inside fenced blocks
+            fenced = re.findall(r"```[\w]*\n(.*?)```", chunk, re.DOTALL)
+            code_chars = sum(len(block) for block in fenced)
+            is_code = 1 if code_chars > len(chunk) * 0.4 else 0
         cur = con.execute(
             "INSERT OR IGNORE INTO docs(lib, version, checked, title, source, text, nav, is_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (name, version, checked, title, source, chunk, link_density(chunk), is_code),

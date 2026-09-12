@@ -157,6 +157,11 @@ def build_parser() -> argparse.ArgumentParser:
     auto_reg.add_argument("--json", action="store_true")
     auto_reg.add_argument("--limit", type=int, default=20, help="max new libraries to add")
 
+    backfill = sub.add_parser("backfill", help="backfill is_code and embeddings for existing docs")
+    backfill.add_argument("--lib", action="append", help="limit to specific libraries")
+    backfill.add_argument("--embeddings", action="store_true", help="also generate embeddings (slow)")
+    backfill.add_argument("--limit", type=int, default=0, help="max docs to process (0=all)")
+
     return p
 
 
@@ -777,6 +782,61 @@ def cmd_auto_registry(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_backfill(args: argparse.Namespace) -> int:
+    """Backfill is_code and embeddings for existing docs."""
+    from .core import db, _embed_text, _get_embedder
+
+    con = db()
+    # 1. Update is_code for all chunks — only mark chunks where code covers >40%
+    # Fetch all chunks and check individually for accuracy
+    all_rows = con.execute("SELECT id, text FROM docs WHERE is_code = 0").fetchall()
+    updated = 0
+    for doc_id, text in all_rows:
+        stripped = text.strip()
+        if stripped.startswith("```"):
+            con.execute("UPDATE docs SET is_code = 1 WHERE id = ?", (doc_id,))
+            updated += 1
+        else:
+            fenced = re.findall(r"```[\w]*\n(.*?)```", text, re.DOTALL)
+            code_chars = sum(len(block) for block in fenced)
+            if code_chars > len(text) * 0.4:
+                con.execute("UPDATE docs SET is_code = 1 WHERE id = ?", (doc_id,))
+                updated += 1
+    con.commit()
+    print(f"is_code updated: {updated} chunks marked as code")
+
+    # 2. Generate embeddings if requested
+    if args.embeddings:
+        embedder = _get_embedder()
+        if not embedder:
+            print("fastembed not installed; skipping embeddings", file=sys.stderr)
+            con.close()
+            return 0
+        scope = ""
+        if args.lib:
+            scope = " AND lib IN (" + ",".join("?" * len(args.lib)) + ")"
+        limit_clause = f" LIMIT {args.limit}" if args.limit else ""
+        rows = con.execute(
+            f"SELECT d.id, d.lib, d.version, d.text FROM docs d LEFT JOIN doc_embeddings e ON e.doc_id = d.id WHERE e.doc_id IS NULL{scope}{limit_clause}",
+            args.lib if args.lib else [],
+        ).fetchall()
+        print(f"generating embeddings for {len(rows)} chunks...")
+        for i, (doc_id, lib, version, text) in enumerate(rows):
+            emb = _embed_text(text)
+            if emb:
+                con.execute(
+                    "INSERT OR REPLACE INTO doc_embeddings(doc_id, lib, version, embedding) VALUES (?, ?, ?, ?)",
+                    (doc_id, lib, version, json.dumps(emb)),
+                )
+            if (i + 1) % 500 == 0:
+                con.commit()
+                print(f"  {i + 1}/{len(rows)}...", end="\r")
+        con.commit()
+        print(f"  {len(rows)} embeddings generated")
+    con.close()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "export-synapse":
@@ -836,6 +896,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_drift(args)
     if args.cmd == "auto-registry":
         return cmd_auto_registry(args)
+    if args.cmd == "backfill":
+        return cmd_backfill(args)
     parser.error(f"unknown command: {args.cmd}")
     return 2
 
