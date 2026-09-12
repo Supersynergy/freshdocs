@@ -117,7 +117,7 @@ def _spawn_autosync(analysis: dict, root: pathlib.Path) -> None:
 def routed_context(
     prompt: str,
     root: pathlib.Path,
-    limit: int = 3,
+    limit: int | None = None,
     model: str | None = None,
     metadata: dict | None = None,
 ) -> str:

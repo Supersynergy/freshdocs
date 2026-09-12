@@ -10,7 +10,8 @@
       "gh": "facebook/react",
       "branch": "main",
       "eco": "npm",
-      "pkg": "react"
+      "pkg": "react",
+      "llms": "https://raw.githubusercontent.com/facebook/react/main/llms.txt"
     },
     "bun": {
       "gh": "oven-sh/bun",
@@ -25,7 +26,8 @@
       "eco": "npm",
       "pkg": "hono",
       "docs_gh": "honojs/website",
-      "docs_branch": "main"
+      "docs_branch": "main",
+      "llms": "https://raw.githubusercontent.com/honojs/hono/main/docs/llms.txt"
     },
     "tailwindcss": {
       "gh": "tailwindlabs/tailwindcss",
@@ -33,7 +35,8 @@
       "eco": "npm",
       "pkg": "tailwindcss",
       "docs_gh": "tailwindlabs/tailwindcss.com",
-      "docs_branch": "main"
+      "docs_branch": "main",
+      "llms": "https://raw.githubusercontent.com/tailwindlabs/tailwindcss/main/llms.txt"
     },
     "zod": {
       "gh": "colinhacks/zod",
@@ -77,7 +80,8 @@
       "pkg": "astro",
       "path": "packages/astro",
       "docs_gh": "withastro/docs",
-      "docs_branch": "main"
+      "docs_branch": "main",
+      "llms": "https://raw.githubusercontent.com/withastro/astro/main/docs/llms.txt"
     },
     "ai-sdk": {
       "gh": "vercel/ai",
@@ -101,7 +105,8 @@
       "eco": "npm",
       "pkg": "next",
       "docs_gh": "vercel/next.js",
-      "docs_branch": "docs"
+      "docs_branch": "docs",
+      "llms": "https://raw.githubusercontent.com/vercel/next.js/canary/docs/llms.txt"
     },
     "nuxt": {
       "gh": "nuxt/nuxt",
@@ -109,14 +114,16 @@
       "eco": "npm",
       "pkg": "nuxt",
       "docs_gh": "nuxt/nuxt",
-      "docs_branch": "docs"
+      "docs_branch": "docs",
+      "llms": "https://raw.githubusercontent.com/nuxt/nuxt/main/docs/llms.txt"
     },
     "svelte": {
       "gh": "sveltejs/svelte",
       "branch": "main",
       "eco": "npm",
       "pkg": "svelte",
-      "path": "packages/svelte"
+      "path": "packages/svelte",
+      "llms": "https://raw.githubusercontent.com/sveltejs/svelte/main/llms.txt"
     },
     "solid": {
       "gh": "solidjs/solid",
@@ -128,7 +135,8 @@
       "gh": "QwikDev/qwik",
       "branch": "main",
       "eco": "npm",
-      "pkg": "@builder.io/qwik"
+      "pkg": "@builder.io/qwik",
+      "llms": "https://raw.githubusercontent.com/QwikDev/qwik/main/llms.txt"
     },
     "remix": {
       "gh": "remix-run/react-router",
@@ -143,7 +151,8 @@
       "branch": "main",
       "eco": "npm",
       "pkg": "@trpc/server",
-      "path": "packages/server"
+      "path": "packages/server",
+      "llms": "https://raw.githubusercontent.com/trpc/trpc/main/llms.txt"
     },
     "prisma": {
       "gh": "prisma/prisma",
@@ -151,7 +160,8 @@
       "eco": "npm",
       "pkg": "prisma",
       "docs_gh": "prisma/docs",
-      "docs_branch": "main"
+      "docs_branch": "main",
+      "llms": "https://raw.githubusercontent.com/prisma/prisma/main/llms.txt"
     },
     "playwright": {
       "gh": "microsoft/playwright",
@@ -201,7 +211,8 @@
       "eco": "npm",
       "pkg": "@nestjs/core",
       "docs_gh": "nestjs/docs.nestjs.com",
-      "docs_branch": "master"
+      "docs_branch": "master",
+      "llms": "https://raw.githubusercontent.com/nestjs/nest/main/llms.txt"
     },
     "rxjs": {
       "gh": "ReactiveX/rxjs",
@@ -392,7 +403,8 @@
       "gh": "fastapi/fastapi",
       "branch": "master",
       "eco": "pypi",
-      "pkg": "fastapi"
+      "pkg": "fastapi",
+      "llms": "https://raw.githubusercontent.com/fastapi/fastapi/master/docs/llms.txt"
     },
     "pydantic": {
       "gh": "pydantic/pydantic",
@@ -412,7 +424,8 @@
       "eco": "pypi",
       "pkg": "django",
       "docs_gh": "django/djangoproject.com",
-      "docs_branch": "main"
+      "docs_branch": "main",
+      "llms": "https://raw.githubusercontent.com/django/django/main/docs/llms.txt"
     },
     "flask": {
       "gh": "pallets/flask",

@@ -152,6 +152,11 @@ def build_parser() -> argparse.ArgumentParser:
     drift.add_argument("--lib", action="append", help="limit to specific libraries")
     drift.add_argument("--json", action="store_true")
 
+    auto_reg = sub.add_parser("auto-registry", help="discover and register libraries from project lockfiles")
+    auto_reg.add_argument("--project", default=".")
+    auto_reg.add_argument("--json", action="store_true")
+    auto_reg.add_argument("--limit", type=int, default=20, help="max new libraries to add")
+
     return p
 
 
@@ -486,7 +491,7 @@ def cmd_hook(args: argparse.Namespace) -> int:
     root = pathlib.Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
     # Hooks already carry the active model in common model/model_id/modelId fields.
     # Forward the payload as evidence instead of requiring duplicate configuration.
-    context = routed_context(prompt, root, args.limit, metadata=payload)
+    context = routed_context(prompt, root, None, metadata=payload)
     if not context:
         return 0
     if args.client == "raw":
@@ -548,6 +553,7 @@ def cmd_deprecations(args: argparse.Namespace) -> int:
         version = versions.get(lib, "")
         if not version:
             continue
+        installed_major = int(version.split(".")[0]) if version.split(".")[0].isdigit() else 0
         for pattern in patterns:
             try:
                 rows = con.execute(
@@ -557,24 +563,41 @@ def cmd_deprecations(args: argparse.Namespace) -> int:
             except Exception:
                 rows = []
             for title, text, source in rows:
-                # Extract a compact snippet around the pattern
-                idx = text.lower().find(pattern.lower())
-                if idx == -1:
-                    snippet = text[:200]
-                else:
+                # Extract all occurrences of the pattern, check version for each
+                idx = 0
+                while True:
+                    idx = text.lower().find(pattern.lower(), idx)
+                    if idx == -1:
+                        break
+                    # Extract version AFTER the pattern match (not just first in snippet)
+                    after_pattern = text[idx:idx + len(pattern) + 120]
+                    ver_match = re.search(
+                        r"(?:since|in|deprecated in|removed in|introduced in)\s+v?(\d+(?:\.\d+)*)",
+                        after_pattern,
+                        re.IGNORECASE,
+                    )
                     start = max(0, idx - 80)
                     end = min(len(text), idx + len(pattern) + 120)
                     snippet = ("..." if start > 0 else "") + text[start:end] + ("..." if end < len(text) else "")
-                results.append(
-                    {
-                        "lib": lib,
-                        "version": version,
-                        "pattern": pattern,
-                        "title": title,
-                        "source": source,
-                        "snippet": snippet.strip(),
-                    }
-                )
+                    deprecation_version = None
+                    if ver_match:
+                        deprecation_version = ver_match.group(1)
+                        dep_major = int(deprecation_version.split(".")[0]) if deprecation_version.split(".")[0].isdigit() else 0
+                        if dep_major > installed_major:
+                            idx += len(pattern)
+                            continue  # Deprecation is newer than installed version
+                    results.append(
+                        {
+                            "lib": lib,
+                            "version": version,
+                            "pattern": pattern,
+                            "title": title,
+                            "source": source,
+                            "snippet": snippet.strip(),
+                            "deprecated_since": deprecation_version,
+                        }
+                    )
+                    idx += len(pattern)
     con.close()
     if args.json:
         print(json.dumps(results, indent=2))
@@ -585,7 +608,8 @@ def cmd_deprecations(args: argparse.Namespace) -> int:
     print(f"DEPRECATION SCAN: {len(results)} markers across {len(set(r['lib'] for r in results))} libraries")
     print()
     for r in results:
-        print(f"[{r['lib']} {r['version']}] {r['pattern']}")
+        ver_note = f" (since {r['deprecated_since']})" if r.get("deprecated_since") else ""
+        print(f"[{r['lib']} {r['version']}]{ver_note} {r['pattern']}")
         print(f"  title: {r['title']}")
         print(f"  source: {r['source']}")
         print(f"  {r['snippet']}")
@@ -647,6 +671,112 @@ def cmd_drift(args: argparse.Namespace) -> int:
     return 0
 
 
+def _github_repo_from_url(url: str) -> str | None:
+    """Extract owner/repo from a repository URL."""
+    if not url:
+        return None
+    # Handle git+https://github.com/owner/repo.git, https://github.com/owner/repo
+    match = re.search(r"github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?/?$", url)
+    if match:
+        return f"{match.group(1)}/{match.group(2)}"
+    return None
+
+
+def _resolve_registry(lib: str, eco: str, pkg: str) -> str | None:
+    """Try to resolve a package to a GitHub repo via its package registry."""
+    import urllib.request
+    import urllib.parse
+
+    headers = {"User-Agent": "freshdocs/0.6"}
+    urls = {
+        "npm": f"https://registry.npmjs.org/{urllib.parse.quote(pkg, safe='')}/latest",
+        "pypi": f"https://pypi.org/pypi/{urllib.parse.quote(pkg, safe='')}/json",
+        "crates": f"https://crates.io/api/v1/crates/{urllib.parse.quote(pkg, safe='')}",
+        "cargo": f"https://crates.io/api/v1/crates/{urllib.parse.quote(pkg, safe='')}",
+        "rubygems": f"https://rubygems.org/api/v1/gems/{urllib.parse.quote(pkg, safe='')}.json",
+        "packagist": f"https://repo.packagist.org/p2/{urllib.parse.quote(pkg, safe='')}.json",
+        "go": f"https://proxy.golang.org/{urllib.parse.quote(pkg, safe='')}/@latest",
+        "hex": f"https://hex.pm/api/packages/{urllib.parse.quote(pkg, safe='')}",
+        "pub": f"https://pub.dev/api/packages/{urllib.parse.quote(pkg, safe='')}",
+    }
+    url = urls.get(eco)
+    if not url:
+        return None
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        data = json.loads(urllib.request.urlopen(req, timeout=10).read())
+        # Extract repository URL from various fields
+        repo_url = ""
+        if eco == "npm":
+            repo_url = data.get("repository", {}).get("url", "")
+        elif eco == "pypi":
+            repo_url = data.get("info", {}).get("project_urls", {}).get("Repository", "") or data.get("info", {}).get("home_page", "")
+        elif eco in {"crates", "cargo"}:
+            repo_url = data.get("crate", {}).get("repository", "") or data.get("crate", {}).get("homepage", "")
+        elif eco == "rubygems":
+            repo_url = data.get("source_code_uri", "") or data.get("homepage_uri", "")
+        elif eco == "packagist":
+            # p2 API returns a list
+            if isinstance(data, list) and data:
+                repo_url = data[0].get("repository", "") or data[0].get("source", {}).get("url", "")
+            elif isinstance(data, dict):
+                repo_url = data.get("repository", "") or data.get("source", {}).get("url", "")
+        elif eco == "go":
+            repo_url = data.get("module", "") or pkg  # Go module path IS the repo
+        elif eco == "hex":
+            repo_url = data.get("meta", {}).get("links", {}).get("GitHub", "") or data.get("meta", {}).get("repository", "")
+        elif eco == "pub":
+            repo_url = data.get("latest", {}).get("pubspec", {}).get("repository", "") or data.get("latest", {}).get("pubspec", {}).get("homepage", "")
+        return _github_repo_from_url(repo_url)
+    except Exception:
+        return None
+
+
+def cmd_auto_registry(args: argparse.Namespace) -> int:
+    """Discover and register libraries from project lockfiles."""
+    root = pathlib.Path(args.project).expanduser().resolve()
+    analysis = project_analysis(root)
+    registry = ensure_registry()
+    reg_libs = registry.get("libs", {})
+    existing = set(reg_libs.keys())
+
+    # Collect dependencies not yet in registry
+    discovered: list[dict[str, Any]] = []
+    for item in analysis.get("dependencies", []):
+        eco = item.get("ecosystem", "")
+        pkg = item.get("package", "")
+        if not pkg or pkg in existing:
+            continue
+        discovered.append(item)
+
+    if not discovered:
+        print("no new libraries to register; all dependencies already in registry")
+        return 0
+
+    # Resolve each to a GitHub repo
+    added = 0
+    for item in discovered[: args.limit]:
+        eco = item["ecosystem"]
+        pkg = item["package"]
+        lib_name = pkg.replace("/", "-").replace(":", "-").replace("@", "").replace("~", "-").lower()
+        # Prefer short name for npm scoped packages
+        if eco == "npm" and "/" in pkg:
+            lib_name = pkg.split("/")[-1].lower()
+        gh_repo = _resolve_registry(lib_name, eco, pkg)
+        if gh_repo:
+            add_library(lib_name, gh_repo, eco, pkg=pkg)
+            print(f"  registered: {lib_name:25s} {eco:10s} {gh_repo}")
+            added += 1
+        else:
+            print(f"  skipped:   {lib_name:25s} {eco:10s} (no GitHub repo found)")
+
+    if added:
+        print(f"\n{added} new libraries registered; run freshdocs sync --project . to fetch docs")
+    else:
+        print("no libraries could be resolved to a GitHub repository")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "export-synapse":
@@ -704,6 +834,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_deprecations(args)
     if args.cmd == "drift":
         return cmd_drift(args)
+    if args.cmd == "auto-registry":
+        return cmd_auto_registry(args)
     parser.error(f"unknown command: {args.cmd}")
     return 2
 
