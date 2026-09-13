@@ -13,10 +13,12 @@ freshdocs sync --latest --project . # sync latest versions
 freshdocs status                    # show all libs + freshness
 freshdocs doctor                    # health check
 freshdocs analyze --project .       # detect project libs
-freshdocs deprecations --project .  # scan for deprecated APIs
+freshdocs deprecations --project .  # scan for deprecated APIs (version-filtered)
 freshdocs drift --project .         # check for new major versions
 freshdocs auto-registry --project . # auto-register unregistered deps
-freshdocs backfill --embeddings     # generate semantic embeddings (optional)
+freshdocs backfill                  # update is_code for existing docs
+freshdocs backfill --embeddings     # generate semantic embeddings (optional, slow)
+freshdocs backfill --embeddings --lib hono  # embeddings for one lib only
 ```
 
 ## Features
@@ -25,11 +27,11 @@ freshdocs backfill --embeddings     # generate semantic embeddings (optional)
 - **Smart budget**: dynamic limit based on query complexity (2-12 chunks)
 - **Code extraction**: `is_code` flag boosts code blocks for "how do I" queries
 - **Semantic search**: optional fastembed hybrid FTS5+embeddings (graceful fallback)
-- **Cross-library links**: detects lib references in docs, includes related context
-- **Diff-aware sync**: commit_sha stored, same-SHA skips re-fetch
+- **Cross-library links**: detects lib references in docs, includes related context with `[linked]` marker
+- **Diff-aware sync**: `commit_sha` stored, same-SHA skips re-fetch
 - **Version-aware deprecations**: filters `@deprecated since X.Y` against installed version
-- **Auto-registry**: discovers unregistered deps from lockfiles, resolves to GitHub repos
-- **llms.txt**: prioritized when available (13 libs)
+- **Auto-registry**: discovers unregistered deps from lockfiles, resolves to GitHub repos via npm/crates/pypi/go/hex/pub APIs
+- **llms.txt**: prioritized when available (14 libs)
 
 ## MCP Tools
 
@@ -42,6 +44,9 @@ freshdocs backfill --embeddings     # generate semantic embeddings (optional)
 - `freshdocs_identity` — model identity probe
 - `freshdocs_probe` — model capability probe
 - `freshdocs_gap` — model gap analysis
+- `freshdocs_deprecations` — scan for deprecated APIs
+- `freshdocs_drift` — check for new major versions
+- `freshdocs_auto_registry` — auto-register unregistered deps
 
 ## Integration
 
@@ -52,7 +57,14 @@ freshdocs backfill --embeddings     # generate semantic embeddings (optional)
 
 ## Cache
 
-- `~/.freshdocs/registry.json` — library registry (166 libs)
+- `~/.freshdocs/registry.json` — library registry (169 libs)
 - `~/.freshdocs/state.json` — sync state per library/version
-- `~/.freshdocs/freshdocs.db` — SQLite FTS5 index (43K chunks, 194MB)
+- `~/.freshdocs/freshdocs.db` — SQLite FTS5 index (45K chunks, ~200MB)
 - `~/.freshdocs/freshdocs.db` → `doc_embeddings` — optional semantic embeddings
+
+## Notes
+
+- Embeddings backfill runs in background (~28% complete as of 2026-09-13). Use `backfill --embeddings` to continue.
+- `is_code` detection: chunks where code covers >40% of content or starts with ``` are marked.
+- Auto-registry: `@types/` prefix stripped, `DefinitelyTyped` blocked for non-type packages.
+- Hook triggers: `how to`, `create`, `use`, `middleware`, `websocket`, `auth`, `jwt`, `oauth`, etc.
