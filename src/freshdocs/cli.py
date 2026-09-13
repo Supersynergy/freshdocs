@@ -756,7 +756,13 @@ def cmd_auto_registry(args: argparse.Namespace) -> int:
     for item in analysis.get("dependencies", []):
         eco = item.get("ecosystem", "")
         pkg = item.get("package", "")
-        if not pkg or pkg in existing:
+        if not pkg:
+            continue
+        # Normalize package name for registry lookup
+        lib_name = pkg.replace("/", "-").replace(":", "-").replace("@", "").replace("~", "-").lower()
+        if eco == "npm" and "/" in pkg:
+            lib_name = pkg.split("/")[-1].lower()
+        if lib_name in existing:
             continue
         discovered.append(item)
 
@@ -764,22 +770,33 @@ def cmd_auto_registry(args: argparse.Namespace) -> int:
         print("no new libraries to register; all dependencies already in registry")
         return 0
 
-    # Resolve each to a GitHub repo
+    # Resolve each to a GitHub repo (parallel, bounded)
+    import concurrent.futures
+
     added = 0
-    for item in discovered[: args.limit]:
-        eco = item["ecosystem"]
-        pkg = item["package"]
-        lib_name = pkg.replace("/", "-").replace(":", "-").replace("@", "").replace("~", "-").lower()
-        # Prefer short name for npm scoped packages
-        if eco == "npm" and "/" in pkg:
-            lib_name = pkg.split("/")[-1].lower()
-        gh_repo = _resolve_registry(lib_name, eco, pkg)
-        if gh_repo:
-            add_library(lib_name, gh_repo, eco, pkg=pkg)
-            print(f"  registered: {lib_name:25s} {eco:10s} {gh_repo}")
-            added += 1
-        else:
-            print(f"  skipped:   {lib_name:25s} {eco:10s} (no GitHub repo found)")
+    to_resolve = discovered[: args.limit]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {
+            pool.submit(_resolve_registry, item["package"], item["ecosystem"], item["package"]): item
+            for item in to_resolve
+        }
+        for future in concurrent.futures.as_completed(futures, timeout=60):
+            item = futures[future]
+            eco = item["ecosystem"]
+            pkg = item["package"]
+            lib_name = pkg.replace("/", "-").replace(":", "-").replace("@", "").replace("~", "-").lower()
+            if eco == "npm" and "/" in pkg:
+                lib_name = pkg.split("/")[-1].lower()
+            try:
+                gh_repo = future.result(timeout=15)
+            except Exception:
+                gh_repo = None
+            if gh_repo:
+                add_library(lib_name, gh_repo, eco, pkg=pkg)
+                print(f"  registered: {lib_name:25s} {eco:10s} {gh_repo}")
+                added += 1
+            else:
+                print(f"  skipped:   {lib_name:25s} {eco:10s} (no GitHub repo found)")
 
     if added:
         print(f"\n{added} new libraries registered; run freshdocs sync --project . to fetch docs")
