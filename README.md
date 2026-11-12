@@ -100,12 +100,22 @@ model: gpt-5.6-sol (auto source env:OPENAI_MODEL; matched measured:openai/gpt-5.
   skip  zod    4.1.5   covered by training
 ```
 
-| Verdict | Meaning | Action |
-|---|---|---|
-| `ahead` | Released after the cutoff. The model cannot know it. | full context |
-| `behind` | The project pins an older release than the model learned, so memory may use a newer API. | full context |
-| `covered` | The model's knowledge and the project agree. | one pointer: header and source URL, no prose |
-| `unknown` | Any input is missing. | full context, with the reason |
+- **`ahead`**<br>
+  Meaning: Released after the cutoff. The model cannot know it.<br>
+  Action: full context
+
+- **`behind`**<br>
+  Meaning: The project pins an older release than the model learned, so memory may use a newer API.<br>
+  Action: full context
+
+- **`covered`**<br>
+  Meaning: The model's knowledge and the project agree.<br>
+  Action: one pointer: header and source URL, no prose
+
+- **`unknown`**<br>
+  Meaning: Any input is missing.<br>
+  Action: full context, with the reason
+
 
 Detection precedence is explicit override, hook/MCP metadata, provider model environment,
 then a known agent's `--model` argument or its own active configuration. Supported metadata aliases
@@ -124,11 +134,18 @@ and `FRESHDOCS_MODEL` remain optional overrides, never requirements.
 
 Measured on a four-library project with a probed model:
 
-| Situation | Hits | Approx. tokens |
-|---|---|---|
-| identity unavailable, fail-safe full context | 8 | 2430 |
-| one library is a gap, three are covered | 5 full + pointers | 1700 |
-| every library is covered | 1 pointer | 240 |
+- **identity unavailable, fail-safe full context**<br>
+  Hits: 8<br>
+  Approx. tokens: 2430
+
+- **one library is a gap, three are covered**<br>
+  Hits: 5 full + pointers<br>
+  Approx. tokens: 1700
+
+- **every library is covered**<br>
+  Hits: 1 pointer<br>
+  Approx. tokens: 240
+
 
 The budget is split per library by verdict, so a library the model has never seen is
 guaranteed its share and is listed first; a library that merely scores higher on the
@@ -226,13 +243,26 @@ Expected result: a compact `FRESHDOCS CONTEXT` block with library, exact project
 
 ## What You See
 
-| Signal | Why it matters |
-|---|---|
-| Project version | Freshdocs reads the lockfile before deciding which version belongs in the prompt. |
-| Fetch date | Reviewers see when the document content—not only the registry version—was fetched. |
-| Ref status | `exact-ref` is the library's own version tag; `docs-commit <sha>` is a docs repository read at a fixed commit; `branch-fallback` and `live-unversioned` are explicit warnings. |
-| Source label | Snippets point back to docs, changelog, `llms.txt`, or registry data. |
-| Explicit miss | Empty cache and stale docs are visible instead of silently guessed. |
+<details>
+<summary><strong>📋 Show 5 entries</strong></summary>
+
+- **Project version**<br>
+  Why it matters: Freshdocs reads the lockfile before deciding which version belongs in the prompt.
+
+- **Fetch date**<br>
+  Why it matters: Reviewers see when the document content—not only the registry version—was fetched.
+
+- **Ref status**<br>
+  Why it matters: `exact-ref` is the library's own version tag; `docs-commit <sha>` is a docs repository read at a fixed commit; `branch-fallback` and `live-unversioned` are explicit warnings.
+
+- **Source label**<br>
+  Why it matters: Snippets point back to docs, changelog, `llms.txt`, or registry data.
+
+- **Explicit miss**<br>
+  Why it matters: Empty cache and stale docs are visible instead of silently guessed.
+
+</details>
+
 
 ## Two-Minute Proof
 
@@ -249,12 +279,23 @@ That is the trust contract: **missing docs are visible; stale docs are visible; 
 
 ## Terms In Plain English
 
-| Term | Meaning |
-|---|---|
-| MCP | Model Context Protocol: a standard way for AI tools to call local tools. |
-| `llms.txt` | A docs file some projects publish specifically for AI tools. |
-| SQLite FTS | A local database with full-text search. No hosted service required. |
-| Source map | A checklist of where an agent should look before claiming it knows a library or language. |
+<details>
+<summary><strong>📋 Show 4 entries</strong></summary>
+
+- **MCP**<br>
+  Meaning: Model Context Protocol: a standard way for AI tools to call local tools.
+
+- **`llms.txt`**<br>
+  Meaning: A docs file some projects publish specifically for AI tools.
+
+- **SQLite FTS**<br>
+  Meaning: A local database with full-text search. No hosted service required.
+
+- **Source map**<br>
+  Meaning: A checklist of where an agent should look before claiming it knows a library or language.
+
+</details>
+
 
 ## Who It Is For
 
@@ -367,16 +408,43 @@ Hosted docs tools such as Context7 are useful when you want instantly available 
 
 Freshdocs is useful when you want local control:
 
-| Need | Context7 | freshdocs |
-|---|---:|---:|
-| Fresh public docs | yes | yes |
-| CLI and MCP access | yes | yes |
-| Local offline cache after sync | client/service dependent | yes |
-| Private/internal docs path | enterprise/cloud path | local-first |
-| Repo dependency detection | client dependent | built in |
-| Changelog-aware local search | varies | built in |
-| No account or hosted dependency at answer time | no | yes after sync |
-| Source planner for language/tool/repo discovery | no | yes |
+<details>
+<summary><strong>📋 Show 8 entries</strong></summary>
+
+- **Fresh public docs**<br>
+  Context7: yes<br>
+  freshdocs: yes
+
+- **CLI and MCP access**<br>
+  Context7: yes<br>
+  freshdocs: yes
+
+- **Local offline cache after sync**<br>
+  Context7: client/service dependent<br>
+  freshdocs: yes
+
+- **Private/internal docs path**<br>
+  Context7: enterprise/cloud path<br>
+  freshdocs: local-first
+
+- **Repo dependency detection**<br>
+  Context7: client dependent<br>
+  freshdocs: built in
+
+- **Changelog-aware local search**<br>
+  Context7: varies<br>
+  freshdocs: built in
+
+- **No account or hosted dependency at answer time**<br>
+  Context7: no<br>
+  freshdocs: yes after sync
+
+- **Source planner for language/tool/repo discovery**<br>
+  Context7: no<br>
+  freshdocs: yes
+
+</details>
+
 
 Freshdocs is not trying to replace every docs service. It is a small local trust layer for agents.
 
