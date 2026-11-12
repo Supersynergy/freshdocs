@@ -15,6 +15,8 @@
 
 > **Local-first by default:** `context`, `search`, `detect`, `status`, and `doctor` never edit your project. `sync` writes only to the Freshdocs cache. If docs are missing or stale, Freshdocs says so instead of hiding the uncertainty.
 
+[🚀 Quick start](#quick-start) · [✅ Two-minute proof](#two-minute-proof) · [🛠️ Commands](#commands) · [🤖 MCP tools](#mcp-tools) · [🔒 Trust boundaries](#trust-boundaries)
+
 ## Demo
 
 ```sh
@@ -40,6 +42,9 @@ source: https://raw.githubusercontent.com/honojs/hono/v4.12.27/README.md
 ```
 
 ## Why This Exists
+
+<details>
+<summary>Read the background and detailed guidance</summary>
 
 Agents are fast until they confidently use an API that no longer exists.
 
@@ -203,6 +208,9 @@ FIX:
   2. if it still misses, the docs do not cover this API: say so instead of guessing
 Until then, state that the API could not be verified against current docs.
 ```
+
+
+</details>
 
 ## Quick Start
 
