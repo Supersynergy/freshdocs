@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Supersynergy/freshdocs/main/docs/assets/social-preview.jpg" alt="freshdocs — stop AI coding agents from using stale docs" width="100%">
+  <img src="docs/assets/social-preview.jpg" alt="freshdocs" width="100%">
 </p>
 
 # freshdocs
